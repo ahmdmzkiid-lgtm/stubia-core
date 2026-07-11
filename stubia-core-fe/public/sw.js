@@ -1,8 +1,10 @@
-const CACHE_NAME = 'stubia-core-cache-v1';
+const CACHE_NAME = 'stubia-core-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icons/192.webp',
+  '/icons/512.webp'
 ];
 
 // Install Event
@@ -31,32 +33,55 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event (Network-first fallback to cache)
+// Fetch Event (Cache-first for static assets, network fallback)
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
   if (event.request.method !== 'GET') return;
-  // Skip browser extension requests or socket.io or api calls
+
+  const url = new URL(event.request.url);
+
+  // Skip API, Socket.io, or external third-party requests
   if (
-    event.request.url.includes('/socket.io') || 
-    event.request.url.includes('/api/') ||
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/socket.io') ||
     !event.request.url.startsWith(self.location.origin)
-  ) return;
+  ) {
+    return;
+  }
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request)
+        .then((response) => {
+          // Cache valid static responses
+          if (response && response.status === 200 && (
+            url.pathname === '/' ||
+            url.pathname.endsWith('.html') ||
+            url.pathname.endsWith('.js') ||
+            url.pathname.endsWith('.css') ||
+            url.pathname.endsWith('.webp') ||
+            url.pathname.endsWith('.png') ||
+            url.pathname.endsWith('.json')
+          )) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to index.html for SPA routes when offline
+          if (event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('/index.html');
+          }
+          // Return a standard offline response if not found in cache
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
+    })
   );
 });
 
@@ -71,8 +96,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Notifikasi Baru';
   const options = {
     body: data.body || 'Anda mendapatkan notifikasi baru dari Stubia Core.',
-    icon: data.icon || '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: data.icon || '/icons/192.webp',
+    badge: '/icons/192.webp',
     data: {
       url: data.url || '/'
     }
@@ -90,14 +115,12 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // If a window is already open, focus it
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open a new window
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }

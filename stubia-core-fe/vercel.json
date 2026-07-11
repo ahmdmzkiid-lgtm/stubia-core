@@ -2,15 +2,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-stubia-backend.onrender.com/api/:path*"
+      "destination": "https://stubia-core.onrender.com/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://your-stubia-backend.onrender.com/uploads/:path*"
+      "destination": "https://stubia-core.onrender.com/uploads/:path*"
     },
     {
       "source": "/socket.io/:path*",
-      "destination": "https://your-stubia-backend.onrender.com/socket.io/:path*"
+      "destination": "https://stubia-core.onrender.com/socket.io/:path*"
     },
     {
       "source": "/(.*)",
