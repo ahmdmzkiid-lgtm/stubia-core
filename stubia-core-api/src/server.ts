@@ -73,9 +73,9 @@ const authLimiter = rateLimit({
   },
 });
 
-// Apply rate limits
-app.use('/api/', apiLimiter);
-app.use('/api/auth/', authLimiter);
+// Apply rate limits (Disabled to prevent "Too many requests" limits during active usage)
+// app.use('/api/', apiLimiter);
+// app.use('/api/auth/', authLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

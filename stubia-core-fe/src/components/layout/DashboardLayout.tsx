@@ -82,10 +82,18 @@ export const DashboardLayout: React.FC = () => {
 
           if (timeLeftHours > 0 && timeLeftHours <= 24 && !notifiedTasks.includes(task.id)) {
             // Trigger native OS push notification
-            if ('Notification' in window && Notification.permission === 'granted') {
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+              navigator.serviceWorker.ready.then((registration) => {
+                registration.showNotification('Tenggat Tugas Mendekati Akhir', {
+                  body: `Tugas "${task.title}" harus diselesaikan dalam waktu kurang dari 24 jam!`,
+                  icon: '/icons/192.webp',
+                  badge: '/icons/192.webp',
+                });
+              });
+            } else if ('Notification' in window && Notification.permission === 'granted') {
               new Notification('Tenggat Tugas Mendekati Akhir', {
                 body: `Tugas "${task.title}" harus diselesaikan dalam waktu kurang dari 24 jam!`,
-                icon: '/icons/icon-192.png',
+                icon: '/icons/192.webp',
               });
             }
 
@@ -195,10 +203,18 @@ export const DashboardLayout: React.FC = () => {
       );
 
       // Show native OS push notification
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(`Pesan dari ${message.sender.name}`, {
+            body: message.content,
+            icon: '/icons/192.webp',
+            badge: '/icons/192.webp',
+          });
+        });
+      } else if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(`Pesan dari ${message.sender.name}`, {
           body: message.content,
-          icon: '/icons/icon-192.png',
+          icon: '/icons/192.webp',
         });
       }
 
