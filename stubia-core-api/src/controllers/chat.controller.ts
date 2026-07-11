@@ -165,6 +165,30 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response, next
       chatNamespace.to(roomId).emit('new_message', message);
     }
 
+    // Trigger Web Push Notifications for background participants
+    try {
+      const room = await prisma.chatRoom.findUnique({
+        where: { id: roomId },
+        include: {
+          participants: {
+            select: { userId: true }
+          }
+        }
+      });
+      if (room) {
+        const { sendPushNotification } = require('../services/PushNotificationService');
+        const senderName = message.sender.name;
+        room.participants
+          .map((p) => p.userId)
+          .filter((id) => id !== req.user?.userId)
+          .forEach((id) => {
+            sendPushNotification(id, `Pesan dari ${senderName}`, content, '/chat');
+          });
+      }
+    } catch (err) {
+      console.error('Failed to trigger background web push:', err);
+    }
+
     res.status(201).json({ success: true, data: message });
   } catch (error) {
     next(error);

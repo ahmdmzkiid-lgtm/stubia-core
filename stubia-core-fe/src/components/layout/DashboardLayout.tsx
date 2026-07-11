@@ -130,6 +130,64 @@ export const DashboardLayout: React.FC = () => {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Sync PWA Web Push Subscription with Backend
+  useEffect(() => {
+    if (!user) return;
+
+    const syncPushSubscription = async () => {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        if (Notification.permission !== 'granted') return;
+
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+          // Fetch public VAPID key
+          const res = await fetch('/api/notifications/vapid-key');
+          const result = await res.json();
+          if (!res.ok || !result.success) return;
+          const publicKey = result.data.publicKey;
+
+          // Convert base64 VAPID key to Uint8Array for browser compatibility
+          const urlBase64ToUint8Array = (base64String: string) => {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+              outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+          };
+
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey),
+          });
+        }
+
+        // Send subscription object to backend
+        const token = useAuthStore.getState().accessToken;
+        await fetch('/api/notifications/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ subscription }),
+        });
+        console.log('Successfully synced Web Push subscription with backend.');
+      } catch (err) {
+        console.error('Failed to sync push subscription:', err);
+      }
+    };
+
+    syncPushSubscription();
+    window.addEventListener('focus', syncPushSubscription);
+    return () => window.removeEventListener('focus', syncPushSubscription);
+  }, [user]);
+
   const joinedRooms = useRef<Set<string>>(new Set());
 
   useEffect(() => {

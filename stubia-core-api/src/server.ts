@@ -17,6 +17,7 @@ import eventsRoutes from './routes/events.routes';
 import chatRoutes from './routes/chat.routes';
 import usersRoutes from './routes/users.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import notificationsRoutes from './routes/notifications.routes';
 import path from 'path';
 
 // Load environment variables
@@ -89,6 +90,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Health Check
