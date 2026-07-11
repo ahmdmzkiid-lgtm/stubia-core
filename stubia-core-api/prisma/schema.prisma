@@ -1,0 +1,393 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  super_admin
+  academic_manager
+  content_creator
+  hr_ops
+  finance_officer
+}
+
+enum QuestionSource {
+  MANUAL
+  AI_GENERATED
+}
+
+enum QuestionStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  PG
+  PGK
+  BS
+  MENJODOHKAN
+  ISIAN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HOTS
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskType {
+  soal
+  review
+  admin
+  marketing
+}
+
+enum EventType {
+  tryout
+  internal
+  marketing
+}
+
+enum CashflowType {
+  debit
+  kredit
+}
+
+enum ReimbursementStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                    String                @id @default(cuid())
+  name                  String
+  email                 String                @unique
+  passwordHash          String                @map("password_hash")
+  role                  UserRole
+  isActive              Boolean               @default(true) @map("is_active")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  
+  questionsCreated      Question[]            @relation("CreatedQuestions")
+  questionsApproved     Question[]            @relation("ApprovedQuestions")
+  skillsCreated         AISkill[]
+  generationLogs        AIGenerationLog[]
+  tasksAssigned         Task[]                @relation("AssignedTasks")
+  tasksCreated          Task[]                @relation("CreatedTasks")
+  taskTimeLogs          TaskTimeLog[]
+  eventsPIC             Event[]
+  cashflowEntries       CashflowEntry[]
+  reimbursements        Reimbursement[]       @relation("SubmittedReimbursements")
+  reimbursementsReviewed Reimbursement[]      @relation("ReviewedReimbursements")
+  payrollRecords        PayrollRecord[]
+  documentsUploaded     Document[]
+  documentAccessLogs    DocumentAccessLog[]
+  questionPackages      QuestionPackage[]
+  chatParticipants      ChatParticipant[]
+  chatMessages          ChatMessage[]
+
+  @@map("users")
+}
+
+model Question {
+  id           String         @id @default(cuid())
+  stimulus     String?        // teks pengantar/bacaan, nullable
+  soalText     String         @map("soal_text")
+  soalHtml     String         @map("soal_html")
+  optionsJson  Json           @map("options_json") // { A, B, C, D, E }
+  answerKey    String         @map("answer_key")   // "A" atau "A,C" untuk PGK
+  explanation  String         // pembahasan lengkap
+  subtes       String
+  topic        String
+  difficulty   Difficulty
+  type         QuestionType
+  status       QuestionStatus @default(DRAFT)
+  source       QuestionSource @default(MANUAL)
+  modelUsed    String?        @map("model_used")   // "claude-sonnet-4-6", etc
+  
+  skill        AISkill?       @relation(fields: [skillId], references: [id])
+  skillId      String?        @map("skill_id")
+  
+  createdBy    User           @relation("CreatedQuestions", fields: [createdById], references: [id])
+  createdById  String         @map("created_by_id")
+  
+  approvedBy   User?          @relation("ApprovedQuestions", fields: [approvedById], references: [id])
+  approvedById String?        @map("approved_by_id")
+  
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  @@map("questions")
+}
+
+model AISkill {
+  id                 String            @id @default(cuid())
+  namaSkill          String            @map("nama_skill")
+  subtes             String
+  topikCakupanJson   Json              @map("topik_cakupan_json") // string[]
+  instruksiSoal      String            @map("instruksi_soal") // long text
+  formatOutput       String            @map("format_output") // JSON schema instruksi
+  contohSoalJson     Json?             @map("contoh_soal_json") // few-shot examples
+  larangan           String?
+  versi              String            @default("v1.0")
+  isActive           Boolean           @default(true) @map("is_active")
+  
+  createdBy          User              @relation(fields: [createdById], references: [id])
+  createdById        String            @map("created_by_id")
+  
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  questions          Question[]
+  generationLogs     AIGenerationLog[]
+
+  @@map("ai_skills")
+}
+
+model AIGenerationLog {
+  id                 String    @id @default(cuid())
+  user               User      @relation(fields: [userId], references: [id])
+  userId             String    @map("user_id")
+  skill              AISkill   @relation(fields: [skillId], references: [id])
+  skillId            String    @map("skill_id")
+  modelUsed          String    @map("model_used")
+  configJson         Json      @map("config_json")
+  questionsGenerated Int       @map("questions_generated")
+  questionsSaved     Int       @map("questions_saved")
+  questionsBlocked   Int       @map("questions_blocked")
+  tokensUsed         Int?      @map("tokens_used")
+  costEstimateUsd    Float?    @map("cost_estimate_usd")
+  durationMs         Int?      @map("duration_ms")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  @@map("ai_generation_logs")
+}
+
+model QuestionPackage {
+  id          String   @id @default(cuid())
+  name        String
+  configJson  Json     @map("config_json") // { subtests, topics, difficulty_dist, total_questions, include_ai, min_similarity }
+  status      String   @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
+  
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById String   @map("created_by_id")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("question_packages")
+}
+
+model Task {
+  id             String        @id @default(cuid())
+  title          String
+  description    String?
+  status         TaskStatus    @default(BACKLOG)
+  type           TaskType
+  priority       String        @default("P4") // P1, P2, P3, P4
+  deadline       DateTime?
+  estimatedHours Float         @default(0.0) @map("estimated_hours")
+  actualHours    Float         @default(0.0) @map("actual_hours")
+  
+  assignee       User?         @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  assigneeId     String?       @map("assignee_id")
+  
+  creator        User          @relation("CreatedTasks", fields: [creatorId], references: [id])
+  creatorId      String        @map("creator_id")
+  
+  parentTask     Task?         @relation("SubTasks", fields: [parentTaskId], references: [id])
+  parentTaskId   String?       @map("parent_task_id")
+  subTasks       Task[]        @relation("SubTasks")
+  
+  event          Event?        @relation(fields: [eventId], references: [id])
+  eventId        String?       @map("event_id")
+  
+  timeLogs       TaskTimeLog[]
+  proofUrl       String?       @map("proof_url")
+  proofName      String?       @map("proof_name")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@map("tasks")
+}
+
+model TaskTimeLog {
+  id              String    @id @default(cuid())
+  task            Task      @relation(fields: [taskId], references: [id])
+  taskId          String    @map("task_id")
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String    @map("user_id")
+  startedAt       DateTime  @map("started_at")
+  stoppedAt       DateTime? @map("stopped_at")
+  durationSeconds Int       @default(0) @map("duration_seconds")
+
+  @@map("task_time_logs")
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  type        EventType
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime  @map("end_date")
+  description String?
+  status      String    @default("UPCOMING")
+  
+  pic         User      @relation(fields: [picId], references: [id])
+  picId       String    @map("pic_id")
+  
+  tasks       Task[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("events")
+}
+
+model CashflowEntry {
+  id          String       @id @default(cuid())
+  type        CashflowType
+  amount      Float
+  category    String       // Operasional, Marketing, Payroll, Revenue, AI_COST
+  description String
+  refId       String?      @map("ref_id")
+  refType     String?      @map("ref_type")
+  entryDate   DateTime     @default(now()) @map("entry_date")
+  
+  recordedBy  User         @relation(fields: [recordedById], references: [id])
+  recordedById String       @map("recorded_by_id")
+
+  @@map("cashflow_entries")
+}
+
+model Reimbursement {
+  id          String              @id @default(cuid())
+  amount      Float
+  description String
+  receiptUrl  String?             @map("receipt_url")
+  status      ReimbursementStatus @default(SUBMITTED)
+  
+  user        User                @relation("SubmittedReimbursements", fields: [userId], references: [id])
+  userId      String              @map("user_id")
+  
+  reviewedBy  User?               @relation("ReviewedReimbursements", fields: [reviewedById], references: [id])
+  reviewedById String?             @map("reviewed_by_id")
+  reviewedAt  DateTime?           @map("reviewed_at")
+  
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@map("reimbursements")
+}
+
+model PayrollRecord {
+  id            String   @id @default(cuid())
+  periodMonth   Int      @map("period_month")
+  periodYear    Int      @map("period_year")
+  baseSalary    Float    @map("base_salary")
+  soalCount     Int      @default(0) @map("soal_count")
+  soalIncentive Float    @default(0.0) @map("soal_incentive")
+  totalAmount   Float    @map("total_amount")
+  status        String   @default("UNPAID") // UNPAID, PAID
+  generatedAt   DateTime @default(now()) @map("generated_at")
+  
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @map("user_id")
+
+  @@map("payroll_records")
+}
+
+model Document {
+  id           String              @id @default(cuid())
+  name         String
+  folderPath   String              @map("folder_path") // e.g. "Kontrak", "Legal", "SOP", "Internal"
+  fileUrl      String              @map("file_url")
+  fileType     String              @map("file_type")
+  version      Int                 @default(1)
+  
+  uploadedBy   User                @relation(fields: [uploadedById], references: [id])
+  uploadedById String              @map("uploaded_by_id")
+  
+  createdAt    DateTime            @default(now()) @map("created_at")
+  accessLogs   DocumentAccessLog[]
+
+  @@map("documents")
+}
+
+model DocumentAccessLog {
+  id         String   @id @default(cuid())
+  action     String   // view, download
+  accessedAt DateTime @default(now()) @map("accessed_at")
+  
+  document   Document @relation(fields: [documentId], references: [id])
+  documentId String   @map("document_id")
+  
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @map("user_id")
+
+  @@map("document_access_logs")
+}
+
+model Objective {
+  id         String      @id @default(cuid())
+  title      String
+  targetDate DateTime    @map("target_date")
+  status     String      @default("ON_TRACK") // ON_TRACK, AT_RISK, OFF_TRACK
+  progress   Float       @default(0.0)
+  keyResults KeyResult[]
+  createdAt  DateTime    @default(now()) @map("created_at")
+  @@map("objectives")
+}
+
+model KeyResult {
+  id          String    @id @default(cuid())
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  objectiveId String    @map("objective_id")
+  title       String
+  currentVal  Float     @map("current_val")
+  targetVal   Float     @map("target_val")
+  unit        String    @default("%")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  @@map("key_results")
+}
+
+model ChatRoom {
+  id           String            @id @default(cuid())
+  name         String?
+  type         String            // GLOBAL, DEPARTMENT, PERSONAL
+  department   String?           // academic, hr, finance, content, ops
+  createdAt    DateTime          @default(now()) @map("created_at")
+  messages     ChatMessage[]
+  participants ChatParticipant[]
+  @@map("chat_rooms")
+}
+
+model ChatParticipant {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  @@unique([roomId, userId])
+  @@map("chat_participants")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId  String   @map("sender_id")
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  @@map("chat_messages")
+}
