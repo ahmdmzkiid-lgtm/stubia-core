@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Bell, User as UserIcon, Menu } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface NotificationItem {
   id: string;
@@ -35,6 +36,29 @@ export const Topbar: React.FC<TopbarProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const [notificationPermission, setNotificationPermission] = useState<string>(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission;
+    }
+    return 'default';
+  });
+
+  const handleRequestPermission = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        if (permission === 'granted') {
+          toast.success('Notifikasi berhasil diaktifkan!');
+        } else if (permission === 'denied') {
+          toast.error('Izin notifikasi ditolak. Harap aktifkan di pengaturan browser.');
+        }
+      } catch (err) {
+        console.error('Failed to request notification permission:', err);
+      }
+    }
+  };
 
   const getBreadcrumb = () => {
     const path = location.pathname.substring(1);
@@ -71,6 +95,20 @@ export const Topbar: React.FC<TopbarProps> = ({
 
       {/* Profile & Notifications */}
       <div className="flex items-center space-x-3 sm:space-x-4 shrink-0">
+        {/* Enable Notification Button (For iOS/Android Mobile click-gesture requirement) */}
+        {typeof window !== 'undefined' && 'Notification' in window && notificationPermission === 'default' && (
+          <button
+            type="button"
+            onClick={handleRequestPermission}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all rounded-lg text-[10px] font-extrabold shadow-sm shrink-0"
+            title="Aktifkan Notifikasi di HP Anda"
+          >
+            <Bell className="h-3.5 w-3.5 animate-bounce text-amber-600" />
+            <span className="hidden sm:inline">Aktifkan Notifikasi</span>
+            <span className="sm:hidden">Aktifkan</span>
+          </button>
+        )}
+
         {/* Notifications Bell Dropdown container */}
         <div className="relative">
           {/* Notifications Bell Button */}
