@@ -124,6 +124,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ room, onBack }) => {
     };
 
     const handleNewMessage = (message: ChatMessage) => {
+      if (message.roomId !== room.id) return;
       setMessages((prev) => {
         if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
@@ -134,10 +135,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ room, onBack }) => {
     };
 
     const handleMessageUpdated = (message: ChatMessage) => {
+      if (message.roomId !== room.id) return;
       setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)));
     };
 
-    const handleMessageDeleted = (payload: { id: string }) => {
+    const handleMessageDeleted = (payload: { id: string; roomId?: string }) => {
+      if (payload.roomId && payload.roomId !== room.id) return;
       setMessages((prev) => prev.filter((m) => m.id !== payload.id));
     };
 

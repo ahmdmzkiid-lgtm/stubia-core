@@ -100,8 +100,7 @@ export const getChatRooms = async (req: AuthenticatedRequest, res: Response, nex
       where: {
         OR: [
           { type: 'GLOBAL' },
-          { type: 'DEPARTMENT', department: { in: userDepts } },
-          { type: 'PERSONAL', participants: { some: { userId } } },
+          { participants: { some: { userId } } },
         ],
       },
       include: {
