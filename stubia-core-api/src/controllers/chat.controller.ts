@@ -181,7 +181,13 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response, next
           .map((p) => p.userId)
           .filter((id) => id !== req.user?.userId)
           .forEach((id) => {
-            sendPushNotification(id, `Pesan dari ${senderName}`, content, '/chat');
+            sendPushNotification(id, `Pesan dari ${senderName}`, content, '/chat', {
+              urgency: 'high',
+              TTL: 86400,
+              tag: `chat-room-${roomId}`,
+              vibrate: [200, 100, 200],
+              renotify: true
+            });
           });
       }
     } catch (err) {

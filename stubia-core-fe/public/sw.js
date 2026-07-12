@@ -103,6 +103,20 @@ self.addEventListener('push', (event) => {
     }
   };
 
+  // Apply priority options if present in payload
+  if (data.tag) {
+    options.tag = data.tag;
+    if (data.renotify !== undefined) {
+      options.renotify = data.renotify;
+    }
+  }
+  if (data.vibrate) {
+    options.vibrate = data.vibrate;
+  }
+  if (data.requireInteraction !== undefined) {
+    options.requireInteraction = data.requireInteraction;
+  }
+
   event.waitUntil(
     self.registration.showNotification(title, options)
   );

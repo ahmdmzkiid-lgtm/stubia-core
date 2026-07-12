@@ -62,21 +62,50 @@ export const unsubscribeUser = (userId: string) => {
   saveSubscriptions(filtered);
 };
 
-export const sendPushNotification = async (userId: string, title: string, body: string, url: string = '/') => {
+export const sendPushNotification = async (
+  userId: string,
+  title: string,
+  body: string,
+  url: string = '/',
+  options?: {
+    urgency?: 'very-low' | 'low' | 'normal' | 'high';
+    TTL?: number;
+    tag?: string;
+    vibrate?: number[];
+    renotify?: boolean;
+    requireInteraction?: boolean;
+  }
+) => {
   const subs = getSubscriptions();
   const userSub = subs.find((s) => s.userId === userId);
   if (!userSub) return;
+
+  const urgency = options?.urgency || 'high';
+  const TTL = options?.TTL !== undefined ? options.TTL : 86400; // default 1 day TTL
+  const tag = options?.tag || 'chat-message';
+  const vibrate = options?.vibrate || [200, 100, 200];
+  const renotify = options?.renotify !== undefined ? options.renotify : true;
+  const requireInteraction = options?.requireInteraction !== undefined ? options.requireInteraction : false;
 
   const payload = JSON.stringify({
     title,
     body,
     icon: '/icons/192.webp',
     url,
+    tag,
+    vibrate,
+    renotify,
+    requireInteraction,
   });
 
+  const sendOptions = {
+    TTL,
+    urgency,
+  };
+
   try {
-    await webpush.sendNotification(userSub.subscription, payload);
-    console.log(`[WebPush] Sent notification to user ${userId}`);
+    await webpush.sendNotification(userSub.subscription, payload, sendOptions);
+    console.log(`[WebPush] Sent notification to user ${userId} with urgency ${urgency}`);
   } catch (error: any) {
     console.error(`[WebPush] Failed to send notification to user ${userId}:`, error);
     // Auto-clean expired/uninstalled subscriptions
