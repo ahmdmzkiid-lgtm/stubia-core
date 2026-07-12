@@ -185,7 +185,11 @@ export const DashboardLayout: React.FC = () => {
 
     syncPushSubscription();
     window.addEventListener('focus', syncPushSubscription);
-    return () => window.removeEventListener('focus', syncPushSubscription);
+    window.addEventListener('sync-push-subscription', syncPushSubscription);
+    return () => {
+      window.removeEventListener('focus', syncPushSubscription);
+      window.removeEventListener('sync-push-subscription', syncPushSubscription);
+    };
   }, [user]);
 
   const joinedRooms = useRef<Set<string>>(new Set());
@@ -223,12 +227,31 @@ export const DashboardLayout: React.FC = () => {
       content: string;
       senderId: string;
       sender: { name: string; role: string };
+      createdAt: string;
     }) => {
+      // Dispatch custom event for real-time sidebar updates (last message preview & sorting)
+      window.dispatchEvent(new CustomEvent('chat-message-received', { detail: message }));
+
       if (message.senderId === user.id) return;
 
-      // Don't notify if we are inside the chat room
+      // Increment unread count in localStorage if the user is not currently in this room
       const activeRoomId = localStorage.getItem('chat-active-room-id');
-      if (message.roomId === activeRoomId && window.location.pathname === '/chat') return;
+      const isCurrentActiveRoom = message.roomId === activeRoomId && window.location.pathname === '/chat';
+
+      if (!isCurrentActiveRoom) {
+        try {
+          const stored = localStorage.getItem('chat-unread-counts');
+          const counts = stored ? JSON.parse(stored) : {};
+          counts[message.roomId] = (counts[message.roomId] || 0) + 1;
+          localStorage.setItem('chat-unread-counts', JSON.stringify(counts));
+          
+          window.dispatchEvent(new CustomEvent('chat-unread-updated', { detail: { roomId: message.roomId } }));
+        } catch (err) {
+          console.error('Failed to update unread counts:', err);
+        }
+      }
+
+      if (isCurrentActiveRoom) return;
 
       // Play sound
       notificationSound.notifyChime();

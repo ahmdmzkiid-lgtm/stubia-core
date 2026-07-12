@@ -51,6 +51,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         setNotificationPermission(permission);
         if (permission === 'granted') {
           toast.success('Notifikasi berhasil diaktifkan!');
+          window.dispatchEvent(new CustomEvent('sync-push-subscription'));
         } else if (permission === 'denied') {
           toast.error('Izin notifikasi ditolak. Harap aktifkan di pengaturan browser.');
         }

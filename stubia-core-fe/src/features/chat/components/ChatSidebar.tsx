@@ -23,6 +23,7 @@ interface ChatSidebarProps {
   activeUsers: Array<{ id: string; name: string; email: string; role: string }>;
   onStartPersonalChat: (targetUserId: string) => void;
   onRoomsRefresh: () => void;
+  unreadCounts?: Record<string, number>;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,6 +60,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   activeUsers,
   onStartPersonalChat,
   onRoomsRefresh,
+  unreadCounts = {},
 }) => {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'super_admin';
@@ -334,7 +336,14 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       </div>
 
                       {/* Info / Subtitle / Last message preview */}
-                      <p className="text-[10px] text-[#667781] font-bold truncate mt-0.5">{subtitle}</p>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p className="text-[10px] text-[#667781] font-bold truncate">{subtitle}</p>
+                        {unreadCounts[room.id] > 0 && (
+                          <span className="bg-[#00A884] text-white text-[10px] font-extrabold h-5 min-w-[20px] px-1 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                            {unreadCounts[room.id]}
+                          </span>
+                        )}
+                      </div>
                       
                       {lastMsg ? (
                         <div className="flex items-center gap-1 mt-1 text-[11px] text-[#667781] min-w-0">

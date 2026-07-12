@@ -30,6 +30,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
   const location = useLocation();
   const isChildActive = ['/packages', '/questions', '/ai-generator'].includes(location.pathname);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(isChildActive);
+  const [totalUnread, setTotalUnread] = useState<number>(0);
+
+  const calculateTotalUnread = () => {
+    try {
+      const stored = localStorage.getItem('chat-unread-counts');
+      if (stored) {
+        const counts = JSON.parse(stored);
+        const total = Object.values(counts).reduce((acc: number, val: any) => acc + (Number(val) || 0), 0);
+        setTotalUnread(total);
+      } else {
+        setTotalUnread(0);
+      }
+    } catch {
+      setTotalUnread(0);
+    }
+  };
+
+  useEffect(() => {
+    calculateTotalUnread();
+
+    const handleUpdate = () => calculateTotalUnread();
+    window.addEventListener('chat-unread-updated', handleUpdate);
+    window.addEventListener('chat-unread-cleared', handleUpdate);
+
+    return () => {
+      window.removeEventListener('chat-unread-updated', handleUpdate);
+      window.removeEventListener('chat-unread-cleared', handleUpdate);
+    };
+  }, []);
 
   const handleLinkClick = () => {
     if (setIsMobileOpen) {
@@ -251,7 +280,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
                 to={item.path || ''}
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
-                  `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 select-none ${
+                  `relative group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 select-none ${
                     isActive
                       ? 'bg-[#1B3FAB]/8 text-[#1B3FAB] font-extrabold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-[#1B3FAB]'
@@ -261,8 +290,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#1B3FAB]' : 'text-slate-400 group-hover:text-[#1B3FAB]'}`} />
-                    {!isCollapsed && <span>{item.name}</span>}
+                    <div className="flex items-center gap-3">
+                      <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#1B3FAB]' : 'text-slate-400 group-hover:text-[#1B3FAB]'}`} />
+                      {!isCollapsed && <span>{item.name}</span>}
+                    </div>
+                    {item.name === 'Chat Room' && totalUnread > 0 && (
+                      <span className={`bg-rose-500 text-white font-extrabold rounded-full flex items-center justify-center shrink-0 shadow-sm ${
+                        isCollapsed
+                          ? 'absolute top-1.5 right-1.5 h-4 w-4 text-[8px]'
+                          : 'h-5 min-w-[20px] px-1 text-[10px]'
+                      }`}>
+                        {totalUnread}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>

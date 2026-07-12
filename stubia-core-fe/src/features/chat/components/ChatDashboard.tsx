@@ -12,6 +12,14 @@ export const ChatDashboard: React.FC = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<Array<{ id: string; name: string; email: string; role: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(() => {
+    try {
+      const stored = localStorage.getItem('chat-unread-counts');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const fetchRooms = async (autoSelectFirst = true) => {
     try {
@@ -44,9 +52,60 @@ export const ChatDashboard: React.FC = () => {
     initData();
   }, []);
 
+  // Listen for real-time updates from custom events
+  useEffect(() => {
+    const handleMessageReceived = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const message = customEvent.detail;
+
+      setRooms((prevRooms) => {
+        return prevRooms.map((room) => {
+          if (room.id === message.roomId) {
+            const exists = room.messages.some((m) => m.id === message.id);
+            if (exists) return room;
+            return {
+              ...room,
+              messages: [message, ...room.messages],
+            };
+          }
+          return room;
+        });
+      });
+    };
+
+    const handleUnreadUpdated = () => {
+      try {
+        const stored = localStorage.getItem('chat-unread-counts');
+        if (stored) {
+          setUnreadCounts(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    window.addEventListener('chat-message-received', handleMessageReceived);
+    window.addEventListener('chat-unread-updated', handleUnreadUpdated);
+
+    return () => {
+      window.removeEventListener('chat-message-received', handleMessageReceived);
+      window.removeEventListener('chat-unread-updated', handleUnreadUpdated);
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedRoomId) {
       localStorage.setItem('chat-active-room-id', selectedRoomId);
+      setUnreadCounts((prev) => {
+        if (!prev[selectedRoomId]) return prev;
+        const updated = { ...prev, [selectedRoomId]: 0 };
+        localStorage.setItem('chat-unread-counts', JSON.stringify(updated));
+        
+        // Dispatch event so that Sidebar or other components know unread counts were cleared
+        window.dispatchEvent(new CustomEvent('chat-unread-cleared'));
+        
+        return updated;
+      });
     } else {
       localStorage.removeItem('chat-active-room-id');
     }
@@ -92,6 +151,7 @@ export const ChatDashboard: React.FC = () => {
               activeUsers={activeUsers}
               onStartPersonalChat={handleStartPersonalChat}
               onRoomsRefresh={() => fetchRooms(false)}
+              unreadCounts={unreadCounts}
             />
           </div>
 
