@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { TaskStatus, TaskType } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import { SupabaseStorageService } from '../services/SupabaseStorageService';
 
 export const getTasks = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -123,20 +124,18 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response,
     let finalProofName = undefined;
 
     if (proofData && proofName) {
-      const base64Content = proofData.split(';base64,').pop();
-      if (!base64Content) {
-        throw new AppError('Format file bukti tidak valid', 400, 'VALIDATION_ERROR');
+      let fileType = proofType;
+      if (!fileType) {
+        const match = proofData.match(/^data:([^;]+);base64,/);
+        fileType = match ? match[1] : 'application/octet-stream';
       }
 
-      const safeFilename = `${Date.now()}-${proofName.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-      const UPLOAD_DIR = path.join(__dirname, '../../public/uploads');
-      if (!fs.existsSync(UPLOAD_DIR)) {
-        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-      }
-      const filePath = path.join(UPLOAD_DIR, safeFilename);
-      fs.writeFileSync(filePath, Buffer.from(base64Content, 'base64'));
-
-      proofUrl = `/uploads/${safeFilename}`;
+      proofUrl = await SupabaseStorageService.uploadFile(
+        'tasks',
+        proofName,
+        proofData,
+        fileType
+      );
       finalProofName = proofName;
     }
 

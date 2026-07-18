@@ -4,6 +4,7 @@ import { AppError } from '../errors/AppError';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import fs from 'fs';
 import path from 'path';
+import { SupabaseStorageService } from '../services/SupabaseStorageService';
 
 // Local storage backup directory
 const UPLOAD_DIR = path.join(__dirname, '../../public/uploads');
@@ -80,18 +81,13 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response, n
 
     const version = existing ? existing.version + 1 : 1;
     
-    // Save file buffer locally
-    const base64Content = fileData.split(';base64,').pop();
-    if (!base64Content) {
-      throw new AppError('Format file base64 salah', 400, 'VALIDATION_ERROR');
-    }
-
-    // Generate unique name to prevent collisions
-    const safeFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-    const filePath = path.join(UPLOAD_DIR, safeFilename);
-    fs.writeFileSync(filePath, Buffer.from(base64Content, 'base64'));
-
-    const fileUrl = `/uploads/${safeFilename}`;
+    // Upload file to Supabase Storage
+    const fileUrl = await SupabaseStorageService.uploadFile(
+      folderPath,
+      filename,
+      fileData,
+      fileType
+    );
 
     const doc = await prisma.document.create({
       data: {
@@ -328,13 +324,23 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response, n
       throw new AppError('Anda tidak memiliki wewenang untuk menghapus dokumen ini', 403, 'FORBIDDEN');
     }
 
-    // 1. Delete file from local storage if exists
-    const filePath = path.join(__dirname, '../../public', doc.fileUrl);
-    if (fs.existsSync(filePath)) {
+    // 1. Delete file from storage
+    if (doc.fileUrl.startsWith('/uploads/')) {
+      // Local storage cleanup (backward compatibility)
+      const filePath = path.join(__dirname, '../../public', doc.fileUrl);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error('Failed to delete file from disk:', err);
+        }
+      }
+    } else {
+      // Supabase Storage cleanup
       try {
-        fs.unlinkSync(filePath);
+        await SupabaseStorageService.deleteFile(doc.fileUrl);
       } catch (err) {
-        console.error('Failed to delete file from disk:', err);
+        console.error('Failed to delete file from Supabase Storage:', err);
       }
     }
 
