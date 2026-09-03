@@ -6,7 +6,8 @@ import {
   createSkill,
   updateSkill,
   deleteSkill,
-  getLogs
+  getLogs,
+  exportTkaExcel
 } from '../controllers/ai.controller';
 import { authenticate, requireRole } from '../middlewares/auth.middleware';
 
@@ -18,6 +19,7 @@ router.use(authenticate);
 // Generation endpoints
 router.post('/generate-questions', requireRole(['content_creator', 'academic_manager', 'super_admin']), generateQuestions);
 router.post('/save-generated-questions', requireRole(['content_creator', 'academic_manager', 'super_admin']), saveGeneratedQuestions);
+router.post('/export-tka-excel', requireRole(['content_creator', 'academic_manager', 'super_admin']), exportTkaExcel);
 
 // Skills endpoints
 router.get('/skills', requireRole(['content_creator', 'academic_manager', 'super_admin']), getSkills);

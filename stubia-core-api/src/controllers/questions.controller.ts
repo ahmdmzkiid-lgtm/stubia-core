@@ -72,7 +72,7 @@ export const checkSimilarityEndpoint = async (req: AuthenticatedRequest, res: Re
 
 export const getQuestions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { subtes, topic, difficulty, status, source, search, limit = '20', page = '1' } = req.query;
+    const { subtes, topic, difficulty, status, source, modelUsed, search, limit = '20', page = '1' } = req.query;
 
     const parsedLimit = parseInt(limit as string) || 20;
     const parsedPage = parseInt(page as string) || 1;
@@ -85,6 +85,7 @@ export const getQuestions = async (req: AuthenticatedRequest, res: Response, nex
     if (difficulty) where.difficulty = difficulty as Difficulty;
     if (status) where.status = status as QuestionStatus;
     if (source) where.source = source as QuestionSource;
+    if (modelUsed) where.modelUsed = modelUsed as string;
     
     if (search) {
       where.soalText = {
@@ -304,8 +305,6 @@ export const exportQuestions = async (req: AuthenticatedRequest, res: Response, 
     if (topic) where.topic = topic as string;
     if (difficulty) where.difficulty = difficulty as Difficulty;
     if (status) where.status = status as QuestionStatus;
-    else where.status = QuestionStatus.APPROVED; // default export only approved
-    
     if (source) where.source = source as QuestionSource;
 
     const questions = await prisma.question.findMany({

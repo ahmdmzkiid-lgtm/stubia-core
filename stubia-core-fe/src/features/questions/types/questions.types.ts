@@ -41,6 +41,7 @@ export interface QuestionFilters {
   difficulty?: QuestionDifficulty;
   status?: QuestionStatus;
   source?: QuestionSource;
+  modelUsed?: string;
   search?: string;
   page?: number;
   limit?: number;

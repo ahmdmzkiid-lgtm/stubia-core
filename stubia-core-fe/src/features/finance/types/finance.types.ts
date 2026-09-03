@@ -30,5 +30,5 @@ export interface FinanceAnalytics {
   totalOutflow: number;
   netIncome: number;
   categoryBreakdown: Array<{ name: string; value: number }>;
-  costLedgerOverTime: Array<{ date: string; amount: number }>;
+  cashflowOverTime: Array<{ date: string; inflow: number; outflow: number }>;
 }

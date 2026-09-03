@@ -10,7 +10,7 @@ const exportService = new QuestionExportService();
 
 export const generatePackageCandidates = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { subtes, totalQuestions, topicsDistribution, difficultyDistribution, includeAi, minSimilarityThreshold } = req.body;
+    const { subtes, totalQuestions, topicsDistribution, difficultyDistribution, includeAi, model, minSimilarityThreshold } = req.body;
 
     if (!subtes || !totalQuestions || !topicsDistribution || !difficultyDistribution) {
       throw new AppError('Kriteria penjadwalan generator tidak lengkap', 400, 'VALIDATION_ERROR');
@@ -22,6 +22,7 @@ export const generatePackageCandidates = async (req: AuthenticatedRequest, res: 
       topicsDistribution,
       difficultyDistribution,
       includeAi: includeAi !== undefined ? !!includeAi : true,
+      model: model || undefined,
       minSimilarityThreshold: parseFloat(minSimilarityThreshold) || 0.40,
     });
 

@@ -32,7 +32,7 @@ export const getCashflowEntries = async (req: AuthenticatedRequest, res: Respons
 export const createCashflowEntry = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
-    const { type, amount, category, description } = req.body;
+    const { type, amount, category, description, entryDate } = req.body;
 
     if (!type || !amount || !category || !description) {
       throw new AppError('Data transaksi tidak lengkap', 400, 'VALIDATION_ERROR');
@@ -45,6 +45,7 @@ export const createCashflowEntry = async (req: AuthenticatedRequest, res: Respon
         category,
         description,
         recordedById: req.user.userId,
+        ...(entryDate ? { entryDate: new Date(entryDate) } : {}),
       },
       include: {
         recordedBy: { select: { id: true, name: true } },
@@ -54,6 +55,45 @@ export const createCashflowEntry = async (req: AuthenticatedRequest, res: Respon
     res.status(201).json({
       success: true,
       message: 'Transaksi keuangan berhasil dicatat',
+      data: entry,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCashflowEntry = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
+    const { id } = req.params;
+    const { type, amount, category, description, entryDate } = req.body;
+
+    if (!type || !amount || !category || !description) {
+      throw new AppError('Data transaksi tidak lengkap', 400, 'VALIDATION_ERROR');
+    }
+
+    const existing = await prisma.cashflowEntry.findUnique({ where: { id } });
+    if (!existing) {
+      throw new AppError('Transaksi tidak ditemukan', 404, 'NOT_FOUND');
+    }
+
+    const entry = await prisma.cashflowEntry.update({
+      where: { id },
+      data: {
+        type: type as CashflowType,
+        amount: parseFloat(amount),
+        category,
+        description,
+        ...(entryDate ? { entryDate: new Date(entryDate) } : {}),
+      },
+      include: {
+        recordedBy: { select: { id: true, name: true } },
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Transaksi keuangan berhasil diperbarui',
       data: entry,
     });
   } catch (error) {
@@ -237,24 +277,27 @@ export const getFinanceAnalytics = async (req: AuthenticatedRequest, res: Respon
       Marketing: 0,
       Payroll: 0,
       Revenue: 0,
-      AI_COST: 0,
     };
 
-    const costLedgerOverTime: Array<{ date: string; amount: number }> = [];
+    const dailyData: Record<string, { inflow: number; outflow: number }> = {};
 
     entries.forEach((e) => {
+      const dateStr = e.entryDate.toISOString().split('T')[0];
+      if (!dailyData[dateStr]) {
+        dailyData[dateStr] = { inflow: 0, outflow: 0 };
+      }
+
       const amt = e.amount;
       if (e.type === CashflowType.debit) {
         totalInflow += amt;
+        dailyData[dateStr].inflow += amt;
       } else {
         totalOutflow += amt;
+        dailyData[dateStr].outflow += amt;
       }
 
-      categoryTotals[e.category] = (categoryTotals[e.category] || 0) + amt;
-
-      if (e.category === 'AI_COST') {
-        const dateStr = e.entryDate.toISOString().split('T')[0];
-        costLedgerOverTime.push({ date: dateStr, amount: amt });
+      if (e.category !== 'AI_COST') {
+        categoryTotals[e.category] = (categoryTotals[e.category] || 0) + amt;
       }
     });
 
@@ -265,6 +308,12 @@ export const getFinanceAnalytics = async (req: AuthenticatedRequest, res: Respon
       value: Math.round(categoryTotals[cat]),
     }));
 
+    const cashflowOverTime = Object.keys(dailyData).map((date) => ({
+      date,
+      inflow: dailyData[date].inflow,
+      outflow: dailyData[date].outflow,
+    })).sort((a, b) => a.date.localeCompare(b.date));
+
     res.json({
       success: true,
       data: {
@@ -272,7 +321,7 @@ export const getFinanceAnalytics = async (req: AuthenticatedRequest, res: Respon
         totalOutflow,
         netIncome,
         categoryBreakdown,
-        costLedgerOverTime: costLedgerOverTime.slice(-10), // last 10 transactions
+        cashflowOverTime: cashflowOverTime.slice(-10), // last 10 days
       },
     });
   } catch (error) {

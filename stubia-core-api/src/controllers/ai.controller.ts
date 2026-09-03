@@ -2,39 +2,81 @@ import { Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { AIProviderService } from '../services/AIProviderService';
 import { AISkillService } from '../services/AISkillService';
+import { TKAExportService } from '../services/TKAExportService';
 import { AppError } from '../errors/AppError';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { Difficulty, QuestionType, QuestionSource, QuestionStatus } from '@prisma/client';
 
 const aiService = new AIProviderService();
 const skillService = new AISkillService();
+const tkaExportService = new TKAExportService();
 
 // Helper to strip HTML tags for plain text comparison
 const stripHtml = (html: string): string => {
   return html.replace(/<[^>]*>/g, '').trim();
 };
 
-// Helper function to query pg_trgm similarity
-const checkQuestionSimilarity = async (soalText: string) => {
-  const plainText = stripHtml(soalText);
-  if (plainText.length < 30) {
+// Helper function to query pg_trgm similarity on BOTH Soal and Stimulus
+const checkQuestionSimilarity = async (soalText: string, stimulusText?: string | null) => {
+  const plainSoal = stripHtml(soalText || '');
+  const plainStimulus = stripHtml(stimulusText || '');
+
+  if (plainSoal.length < 20 && plainStimulus.length < 30) {
     return [];
   }
 
-  // Execute raw query for trigram similarity
-  const candidates = await prisma.$queryRaw<Array<{ id: string; soal_text: string; sim: number }>>`
-    SELECT id, soal_text, similarity(soal_text, ${plainText}) AS sim
-    FROM questions
-    WHERE similarity(soal_text, ${plainText}) > 0.4
-    ORDER BY sim DESC
-    LIMIT 5
-  `;
+  const candidates: Array<{ id: string; soalText: string; similarity: number; matchType: string }> = [];
 
-  return candidates.map((c) => ({
-    id: c.id,
-    soalText: c.soal_text,
-    similarity: c.sim,
-  }));
+  // 1. Check Stimulus similarity if stimulus is present
+  if (plainStimulus.length >= 30) {
+    const stimulusMatches = await prisma.$queryRaw<Array<{ id: string; soal_text: string; stimulus: string | null; sim: number }>>`
+      SELECT id, soal_text, stimulus, similarity(stimulus, ${plainStimulus}) AS sim
+      FROM questions
+      WHERE stimulus IS NOT NULL AND LENGTH(stimulus) > 20 AND similarity(stimulus, ${plainStimulus}) > 0.35
+      ORDER BY sim DESC
+      LIMIT 5
+    `;
+
+    for (const m of stimulusMatches) {
+      candidates.push({
+        id: m.id,
+        soalText: m.soal_text ? `[Stimulus Mirip] ${m.soal_text}` : `[Stimulus Mirip: "${(m.stimulus || '').substring(0, 70)}..."]`,
+        similarity: m.sim,
+        matchType: 'Stimulus',
+      });
+    }
+  }
+
+  // 2. Check Soal similarity
+  if (plainSoal.length >= 20) {
+    const soalMatches = await prisma.$queryRaw<Array<{ id: string; soal_text: string; sim: number }>>`
+      SELECT id, soal_text, similarity(soal_text, ${plainSoal}) AS sim
+      FROM questions
+      WHERE similarity(soal_text, ${plainSoal}) > 0.40
+      ORDER BY sim DESC
+      LIMIT 5
+    `;
+
+    for (const m of soalMatches) {
+      const existing = candidates.find((c) => c.id === m.id);
+      if (existing) {
+        if (m.sim > existing.similarity) {
+          existing.similarity = m.sim;
+          existing.matchType = 'Stimulus & Soal';
+        }
+      } else {
+        candidates.push({
+          id: m.id,
+          soalText: m.soal_text,
+          similarity: m.sim,
+          matchType: 'Soal',
+        });
+      }
+    }
+  }
+
+  candidates.sort((a, b) => b.similarity - a.similarity);
+  return candidates.slice(0, 5);
 };
 
 export const generateQuestions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -42,8 +84,13 @@ export const generateQuestions = async (req: AuthenticatedRequest, res: Response
   try {
     const { skillId, config, model } = req.body;
 
-    if (!skillId || !config || !config.subtes || !config.topik || !config.difficulty || !config.tipe || !config.jumlah) {
+    if (!skillId || !config || !config.subtes || !config.topik || !config.difficulty || !config.jumlah) {
       throw new AppError('Parameter request tidak lengkap', 400, 'VALIDATION_ERROR');
+    }
+
+    const parsedJumlah = parseInt(config.jumlah) || 5;
+    if (parsedJumlah < 1 || parsedJumlah > 50) {
+      throw new AppError('Jumlah soal harus berada di antara 1 dan 50', 400, 'VALIDATION_ERROR');
     }
 
     const skill = await skillService.getSkillById(skillId);
@@ -52,9 +99,17 @@ export const generateQuestions = async (req: AuthenticatedRequest, res: Response
     const generationResult = await aiService.generateQuestions(skill, {
       subtes: config.subtes,
       topik: config.topik,
+      materi: config.materi,
+      materiList: config.materiList,
       difficulty: config.difficulty,
+      difficultyDistribution: config.difficultyDistribution,
       tipe: config.tipe,
-      jumlah: config.jumlah,
+      tipes: config.tipes,
+      typesDistribution: config.typesDistribution,
+      jumlah: parsedJumlah,
+      reuseStimulus: config.reuseStimulus,
+      questionsPerStimulus: config.questionsPerStimulus,
+      includeImagePrompts: config.includeImagePrompts,
       model,
     });
 
@@ -63,9 +118,9 @@ export const generateQuestions = async (req: AuthenticatedRequest, res: Response
     let warningCount = 0;
     let safeCount = 0;
 
-    // Check similarity for each generated question
+    // Check similarity for each generated question (Checking both Soal and Stimulus)
     for (const q of generationResult.questions) {
-      const similarityCandidates = await checkQuestionSimilarity(q.soal);
+      const similarityCandidates = await checkQuestionSimilarity(q.soal, q.stimulus);
       
       let status: 'SAFE' | 'WARNING' | 'BLOCKED' = 'SAFE';
       const topSimilarity = similarityCandidates.length > 0 ? similarityCandidates[0].similarity : 0;
@@ -130,8 +185,8 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
     const creatorId = req.user.userId;
 
     for (const q of questions) {
-      // Re-validate similarity (anti-bypass validation)
-      const similarityCandidates = await checkQuestionSimilarity(q.soal);
+      // Re-validate similarity on both Soal and Stimulus (anti-bypass validation)
+      const similarityCandidates = await checkQuestionSimilarity(q.soal, q.stimulus);
       const topSimilarity = similarityCandidates.length > 0 ? similarityCandidates[0].similarity : 0;
 
       // academic_manager and super_admin can override blocked questions, content_creator cannot
@@ -143,6 +198,8 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
       // Map enums
       const mappedDifficulty = q.difficulty as Difficulty;
       const mappedType = q.tipe as QuestionType;
+
+      const defaultModel = process.env.AI_DEFAULT_MODEL || 'opus-4.6';
 
       await prisma.question.create({
         data: {
@@ -158,7 +215,7 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
           type: mappedType,
           status: QuestionStatus.DRAFT,
           source: QuestionSource.AI_GENERATED,
-          modelUsed: modelUsed || 'gemini-2.5-flash',
+          modelUsed: modelUsed || defaultModel,
           skillId: skillId || null,
           createdById: creatorId,
         },
@@ -167,13 +224,15 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
       savedCount++;
     }
 
+    const defaultModel = process.env.AI_DEFAULT_MODEL || 'opus-4.6';
+
     // Insert generation log
     if (skillId) {
       await prisma.aIGenerationLog.create({
         data: {
           userId: creatorId,
           skillId,
-          modelUsed: modelUsed || 'gemini-2.5-flash',
+          modelUsed: modelUsed || defaultModel,
           configJson: config || {},
           questionsGenerated: questions.length,
           questionsSaved: savedCount,
@@ -196,7 +255,7 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
               type: 'debit',
               amount: costEstimateUsd,
               category: 'AI_COST',
-              description: `AI Cost estimate for generating ${questions.length} questions using ${modelUsed || 'gemini-2.5-flash'}.`,
+              description: `AI Cost estimate for generating ${questions.length} questions using ${modelUsed || defaultModel}.`,
               refType: 'ai_generation',
               recordedById: recorder.id,
             }
@@ -311,6 +370,37 @@ export const getLogs = async (req: AuthenticatedRequest, res: Response, next: Ne
       success: true,
       data: logs,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Export generated questions as TKA Excel
+export const exportTkaExcel = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { questions, fileName } = req.body;
+
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      throw new AppError('Tidak ada soal untuk di-export', 400, 'VALIDATION_ERROR');
+    }
+
+    const workbook = await tkaExportService.exportToExcel(questions, fileName);
+
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const exportFileName = fileName || `TKA_BINDO_TRYOUT_${dateStr}`;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${exportFileName}.xlsx"`
+    );
+    res.setHeader('Content-Length', buffer.byteLength);
+    res.send(Buffer.from(buffer));
   } catch (error) {
     next(error);
   }

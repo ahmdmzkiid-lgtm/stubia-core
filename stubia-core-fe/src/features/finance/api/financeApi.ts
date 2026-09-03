@@ -22,7 +22,7 @@ export const financeApi = {
     return result.data;
   },
 
-  createCashflowEntry: async (entryData: { type: string; amount: number; category: string; description: string }): Promise<CashflowEntry> => {
+  createCashflowEntry: async (entryData: { type: string; amount: number; category: string; description: string; entryDate?: string }): Promise<CashflowEntry> => {
     const res = await fetch('/api/finance/cashflow', {
       method: 'POST',
       headers: getHeaders(),
@@ -30,6 +30,17 @@ export const financeApi = {
     });
     const result = await res.json();
     if (!res.ok || !result.success) throw new Error(result.error || 'Failed to create cashflow entry');
+    return result.data;
+  },
+
+  updateCashflowEntry: async (id: string, entryData: { type: string; amount: number; category: string; description: string; entryDate?: string }): Promise<CashflowEntry> => {
+    const res = await fetch(`/api/finance/cashflow/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(entryData),
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || 'Failed to update cashflow entry');
     return result.data;
   },
 

@@ -14,12 +14,36 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({ skill, config }) =
 
   const composePromptPreview = () => {
     const topicsStr = config.topik && config.topik.length > 0 ? config.topik.join(', ') : '(Belum dipilih)';
-    const difficultyStr = config.difficulty || 'MEDIUM';
-    const typeStr = config.tipe || 'PG';
+    let difficultyStr: string = config.difficulty || 'MEDIUM';
+    if (config.difficultyDistribution) {
+      const { EASY, MEDIUM, HOTS } = config.difficultyDistribution;
+      difficultyStr = `Distribusi (Mudah: ${EASY}%, Sedang: ${MEDIUM}%, Sulit: ${HOTS}%)`;
+    }
+
+    let typeStr: string = config.tipes && config.tipes.length > 0 ? config.tipes.join(', ') : (config.tipe || 'PG');
+    if (config.typesDistribution && Object.keys(config.typesDistribution).length > 0) {
+      const typeBreakdown = Object.entries(config.typesDistribution)
+        .map(([k, v]) => `${k}: ${v}%`)
+        .join(', ');
+      typeStr = `Komposisi (${typeBreakdown})`;
+    }
+
     const countStr = config.jumlah || 5;
+    const reuseStr = config.reuseStimulus
+      ? `Ya (1 Teks Stimulus untuk ${config.questionsPerStimulus || 5} Soal)`
+      : 'Tidak (Stimulus perorangan)';
+    
+    let materiStr = '';
+    if (config.materiList && config.materiList.length > 0) {
+      materiStr = `\n` + config.materiList.map((m, i) => `  * Stimulus #${i + 1}: ${m}`).join('\n');
+    } else if (config.materi && config.materi.trim()) {
+      materiStr = `Kustom (${config.materi.trim()})`;
+    } else {
+      materiStr = 'Default (Otomatis bervariasi sesuai topik)';
+    }
 
     return `[SYSTEM ROLE]
-Kamu adalah pembuat soal UTBK-SNBT profesional untuk platform Stubia.id...
+Kamu adalah pembuat soal UTBK-SNBT dan TKA SMA profesional untuk platform Stubia.id...
 
 [INSTRUKSI AKADEMIK SKILL]
 ${skill.instruksiSoal}
@@ -33,9 +57,12 @@ ${skill.larangan || 'Tidak ada larangan khusus.'}
 [KONFIGURASI USER]
 - Subtes: ${config.subtes || skill.subtes}
 - Topik: ${topicsStr}
+- Fokus Materi:${materiStr.startsWith('\n') ? materiStr : ' ' + materiStr}
 - Tingkat Kesulitan: ${difficultyStr}
-- Tipe Soal: ${typeStr}
+- Komposisi Tipe Soal: ${typeStr}
+- Prompt Gambar / Infografis: ${config.includeImagePrompts ? 'Aktif (Otomatis buat prompt visual untuk infografis/diagram/grafik)' : 'Opsional (Sesuai kebutuhan wacana)'}
 - Jumlah Soal: ${countStr}
+- Reuse Stimulus: ${reuseStr}
 
 [FORMAT OUTPUT — WAJIB HANYA JSON]
 Kembalikan HANYA array JSON berisi ${countStr} objek soal dengan format terstruktur.`;

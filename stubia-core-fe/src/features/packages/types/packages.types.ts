@@ -12,6 +12,7 @@ export interface QuestionPackage {
       HOTS: number;
     };
     includeAi: boolean;
+    model?: string;
     minSimilarityThreshold: number;
     questions: string[]; // List of resolved question IDs
   };
@@ -31,5 +32,6 @@ export interface PackageGeneratorConfig {
     HOTS: number;
   };
   includeAi: boolean;
+  model?: string;
   minSimilarityThreshold: number;
 }

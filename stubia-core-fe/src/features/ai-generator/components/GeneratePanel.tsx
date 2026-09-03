@@ -8,7 +8,234 @@ import { AIResultCard } from './AIResultCard';
 import { Input } from '../../../components/shared/Input';
 import { Button } from '../../../components/shared/Button';
 import { Badge } from '../../../components/shared/Badge';
-import { Sparkles, Library, Save, HelpCircle } from 'lucide-react';
+import { Sparkles, Library, Save, HelpCircle, FileSpreadsheet, Clock, Cpu, Image as ImageIcon } from 'lucide-react';
+
+const DEFAULT_BINDO_MATERI_OPTIONS = [
+  'Teks Puisi',
+  'Teks Dongeng & Cerita Rakyat',
+  'Teks Cerpen & Fabel',
+  'Teks Berita & Eksplanasi',
+  'Teks Editorial & Opini',
+  'Teks Artikel Ilmiah Populer',
+  'Teks Drama & Dialog',
+  'Teks Biografi Tokoh',
+  'Teks Laporan Observasi (LHO)',
+  'Teks Eksplanasi Fenomena Alam',
+  'Teks Eksposisi Lingkungan Hidup',
+  'Teks Prosedur Kompleks',
+  'Teks Negosiasi & Diskusi',
+];
+
+const DEFAULT_KIMIA_MATERI_OPTIONS = [
+  'Kimia Dasar – Struktur Atom dan Sistem Periodik Unsur',
+  'Kimia Dasar – Ikatan Kimia dan Bentuk Molekul',
+  'Kimia Dasar – Stoikiometri dan Hukum Dasar Kimia',
+  'Kimia Analitik – Larutan Asam Basa dan pH',
+  'Kimia Analitik – Larutan Penyangga (Buffer) dan Hidrolisis',
+  'Kimia Analitik – Titrasi Asam Basa dan Stoikiometri Larutan',
+  'Kimia Fisik – Termokimia dan Perubahan Entalpi',
+  'Kimia Fisik – Laju Reaksi dan Faktor yang Mempengaruhi',
+  'Kimia Fisik – Kesetimbangan Kimia dan Pergeseran Le Chatelier',
+  'Kimia Fisik – Elektrokimia, Sel Volta dan Elektrolisis',
+  'Kimia Organik – Hidrokarbon (Alkana, Alkena, Alkuna)',
+  'Kimia Organik – Gugus Fungsi dan Reaksi Senyawa Karbon',
+];
+
+const DEFAULT_FISIKA_MATERI_OPTIONS = [
+  'Kinematika – Gerak Lurus (Analisis Grafik GLB & GLBB)',
+  'Kinematika – Gerak Lengkung (Parabola & Gerak Melingkar Beraturan)',
+  'Dinamika – Hubungan Gaya dan Gerak (Hukum Newton & Diagram Gaya)',
+  'Dinamika – Momentum, Impuls & Tumbukan Sehari-hari',
+  'Dinamika – Dinamika Rotasi & Momen Inersia/Torsi',
+  'Fluida – Fluida Statis (Hukum Pascal & Archimedes)',
+  'Fluida – Fluida Dinamis (Kontinuitas & Asas Bernoulli)',
+  'Gelombang – Gelombang Bunyi (Efek Doppler & Intensitas)',
+  'Kalor dan Termodinamika – Perpindahan Kalor & Asas Black',
+  'Kalor dan Termodinamika – Gas Ideal & Siklus Termodinamika',
+  'Kelistrikan – Rangkaian Listrik Arus Searah (Hukum Kirchhoff)',
+  'Kinematika – Pengukuran Besaran Fisis & Angka Penting',
+];
+
+const DEFAULT_BIOLOGI_MATERI_OPTIONS = [
+  'Keanekaragaman Hayati – Klasifikasi & Keanekaragaman Fauna/Flora Indonesia',
+  'Keanekaragaman Hayati – Bakteri (Struktur Sel & Peranannya bagi Manusia)',
+  'Keanekaragaman Hayati – Ekosistem (Interaksi Antarkomponen & Keseimbangan Lingkungan)',
+  'Sel – Metabolisme Sel (Cara Kerja Enzim & Faktor Lingkungan)',
+  'Sel – Katabolisme & Anabolisme (Respirasi Seluler & Fotosintesis)',
+  'Proses Makhluk Hidup – Sistem Sirkulasi (Struktur Jantung & Pembuluh Darah)',
+  'Proses Makhluk Hidup – Sistem Respirasi (Mekanisme Pertukaran Gas Alveolus)',
+  'Proses Makhluk Hidup – Sistem Ekskresi (Struktur Nefron Ginjal & Pembentukan Urine)',
+  'Proses Makhluk Hidup – Sistem Koordinasi (Mekanisme Penghantaran Impuls Saraf)',
+  'Proses Makhluk Hidup – Sistem Imun (Respon Kekebalan Spesifik & Nonspesifik)',
+  'Proses Makhluk Hidup – Sistem Reproduksi (Siklus Menstruasi & Spermatogenesis)',
+  'Keterampilan Proses – Perancangan Eksperimen & Analisis Data Biologi',
+];
+
+const DEFAULT_MTK_MATERI_OPTIONS = [
+  'Aljabar – Fungsi Komposisi dan Invers',
+  'Aljabar – Barisan dan Deret Aritmetika/Geometri',
+  'Aljabar – Sistem Persamaan Linear Tiga Variabel (SPLTV)',
+  'Aljabar – Program Linear dan Pertidaksamaan',
+  'Geometri – Dimensi Tiga dan Jarak Objek Geometri',
+  'Geometri – Transformasi Geometri (Translasi, Rotasi, Dilatasi)',
+  'Geometri – Luas dan Volume Bangun Ruang',
+  'Trigonometri – Perbandingan Trigonometri Segitiga Siku-siku',
+  'Trigonometri – Aturan Sinus dan Cosinus',
+  'Data dan Peluang – Ukuran Pemusatan & Penyebaran Data',
+  'Data dan Peluang – Kaidah Pencacahan, Permutasi & Kombinasi',
+  'Data dan Peluang – Peluang Kejadian Majemuk',
+  'Bilangan – Eksponen, Bentuk Akar dan Logaritma',
+];
+
+const DEFAULT_MTK_LANJUT_MATERI_OPTIONS = [
+  'Aljabar – Matriks (Determinan & Invers 2x2/3x3)',
+  'Aljabar – Polinomial & Teorema Sisa/Faktor',
+  'Aljabar – Fungsi Eksponen & Logaritma Lanjut',
+  'Aljabar – Fungsi Rasional & Asimtot Kurva',
+  'Geometri dan Pengukuran – Vektor pada Bidang dan Ruang',
+  'Geometri dan Pengukuran – Persamaan & Garis Singgung Lingkaran',
+  'Geometri dan Pengukuran – Transformasi Geometri dengan Matriks',
+  'Trigonometri – Limit Fungsi Aljabar Mendekati Titik & Tak Hingga',
+  'Trigonometri – Limit Fungsi Trigonometri Dasar & Lanjut',
+  'Aljabar – Pemodelan Matriks & Program Linear Kompleks',
+  'Geometri dan Pengukuran – Komposisi Transformasi Titik/Garis/Kurva',
+  'Aljabar – Sifat Akar-Akar Polinomial Orde 3 dan 4',
+];
+
+const DEFAULT_BING_MATERI_OPTIONS = [
+  'Pemahaman Inferensial – Analytical Exposition (Ide Pokok)',
+  'Pemahaman Tekstual – Descriptive Text (Informasi Rinci)',
+  'Pemahaman Inferensial – Narrative Text (Sebab-Akibat & Moral)',
+  'Pemahaman Tekstual – Procedure Text (Langkah & Urutan)',
+  'Evaluasi dan Apresiasi – Analytical Exposition (Fakta vs Opini)',
+  'Pemahaman Inferensial – Recount Text (Pengalaman & Kronologis)',
+  'Evaluasi dan Apresiasi – Descriptive Text (Tujuan Komunikatif)',
+  'Pemahaman Tekstual – Recount Text (Biografi Tokoh)',
+  'Evaluasi dan Apresiasi – Narrative Text (Karakter Tokoh & Plot)',
+  'Pemahaman Inferensial – Procedure Text (Maksud & Tujuan Alat)',
+  'Pemahaman Tekstual – Analytical Exposition (Sintesis Argumen)',
+  'Evaluasi dan Apresiasi – Berita & Artikel Ilmiah Populer',
+];
+
+const DEFAULT_BING_LANJUT_MATERI_OPTIONS = [
+  'Pemahaman Inferensial – Exposition: Sudut Pandang Penulis & Tujuan',
+  'Pemahaman Inferensial – Discussion: Analisis Argumen Pro & Kontra',
+  'Evaluasi dan Apresiasi – Exposition: Menilai Kekuatan & Logika Argumen',
+  'Evaluasi dan Apresiasi – Discussion: Menilai Fakta vs Opini & Kredibilitas',
+  'Pemahaman Tekstual – Exposition: Menemukan Gagasan Utama & Bukti Eksplisit',
+  'Pemahaman Inferensial – Discussion: Hubungan Sebab-Akibat & Implikasi Kebijakan',
+  'Evaluasi dan Apresiasi – Exposition: Menanggapi Teks & Validitas Informasi',
+  'Pemahaman Tekstual – Discussion: Klasifikasi Argumen & Poin Kunci',
+  'Pemahaman Inferensial – Exposition: Memprediksi Implikasi Teknologi Masa Depan',
+  'Pemahaman Tekstual – Exposition: Meringkas Struktur Argumen Kunci',
+  'Evaluasi dan Apresiasi – Discussion: Sintesis Dua Sudut Pandang yang Berseberangan',
+  'Pemahaman Inferensial – Discussion: Menyimpulkan Sikap Objektif Penulis',
+];
+
+const DEFAULT_BINDO_LANJUT_MATERI_OPTIONS = [
+  'Pemahaman Tekstual – Teks Informasi Akademik & Dunia Kerja',
+  'Pemahaman Inferensial – Sastra Melayu Klasik (Hikayat & Syair)',
+  'Pemahaman Inferensial – Nilai Kehidupan Sastra Modern & Terjemahan',
+  'Evaluasi dan Apresiasi – Evaluasi Antarteks (Komparasi Gagasan)',
+  'Evaluasi dan Apresiasi – Penilaian Logika Berpikir & Fakta vs Opini',
+  'Pemahaman Inferensial – Kohesi dan Koherensi Teks Ilmiah',
+  'Pemahaman Inferensial – Konversi Informasi Tabel/Grafik ke Uraian',
+  'Evaluasi dan Apresiasi – Alih Wahana Puisi ke Prosa',
+  'Evaluasi dan Apresiasi – Respon Estetis & Nilai Moral Tokoh',
+  'Pemahaman Tekstual – Pengajuan Usulan & Solusi Dunia Kerja',
+  'Pemahaman Inferensial – Ketepatan Penggunaan Kiasan & Citraan',
+  'Pemahaman Tekstual – Teks Fiksi Realisme & Absurd',
+];
+
+const DEFAULT_PPKN_MATERI_OPTIONS = [
+  'Pancasila – Demokrasi Pancasila & Nilai-Nilai Dasar Negara',
+  'UUD NRI Tahun 1945 – Kewenangan Lembaga Negara & Penegakan Hukum',
+  'Bhinneka Tunggal Ika – Harmoni Keberagaman & Gotong Royong sebagai Modal Sosial',
+  'Negara Kesatuan Republik Indonesia – Wawasan Nusantara & Sistem Pertahanan Keamanan',
+  'Pancasila – Solusi Permasalahan Kebangsaan & Identitas Nasional',
+  'UUD NRI Tahun 1945 – Hubungan Pemerintah Pusat-Daerah & Hak Kewajiban Warga Negara',
+  'Bhinneka Tunggal Ika – Mengelola Kebinekaan & Mengatasi Ancaman Disintegrasi',
+  'Negara Kesatuan Republik Indonesia – Peran Indonesia dalam Perdamaian Dunia & Demokrasi',
+];
+
+const DEFAULT_EKONOMI_MATERI_OPTIONS = [
+  'Ekonomi Mikro dan Makro – Permintaan, Penawaran, dan Keseimbangan Pasar',
+  'Ekonomi Mikro dan Makro – Indeks Harga dan Inflasi',
+  'Akuntansi Keuangan Dasar – Persamaan Dasar Akuntansi',
+  'Ekonomi Internasional – Perdagangan Internasional & Neraca Pembayaran',
+  'Ekonomi Mikro dan Makro – Pendapatan Nasional & Pertumbuhan Ekonomi',
+  'Ekonomi Mikro dan Makro – Bank Sentral & Kebijakan Moneter',
+  'Konsep Dasar Ilmu Ekonomi – Kelangkaan & Biaya Peluang',
+  'Akuntansi Keuangan Dasar – Laporan Keuangan Perusahaan Jasa dan Dagang',
+  'Ekonomi Mikro dan Makro – Kebijakan Fiskal dan Perpajakan',
+  'Ekonomi Mikro dan Makro – Ketenagakerjaan & Permasalahannya',
+  'Ekonomi Mikro dan Makro – Manajemen Badan Usaha & Koperasi',
+];
+
+const DEFAULT_GEOGRAFI_MATERI_OPTIONS = [
+  'Wilayah Tempat Tinggal dan Lingkungan Sekitar – Karakteristik Fisik & Sosial Wilayah',
+  'Wilayah Tempat Tinggal dan Lingkungan Sekitar – Dinamika Kependudukan & Piramida Penduduk',
+  'Proses yang Memengaruhi Lingkungan Fisik dan Sosial – Peranan Manusia dalam Perubahan Lingkungan Fisik',
+  'Proses yang Memengaruhi Lingkungan Fisik dan Sosial – Persebaran Bioma Dunia & Pengaruhnya',
+  'Interaksi Antargejala Fisik Alam dan Manusia – Posisi Strategis Indonesia & Pengaruh Sosial-Ekonomi',
+  'Interaksi Antargejala Fisik Alam dan Manusia – Potensi & Pengelolaan SDA Berkelanjutan',
+  'Mitigasi dan Adaptasi Bencana Alam – Karakteristik & Mitigasi Bencana Geologis',
+  'Mitigasi dan Adaptasi Bencana Alam – Mitigasi & Adaptasi Bencana Hidroklimatologis',
+  'Fenomena Geografi Sehari-hari – Interpretasi Citra Penginderaan Jauh & SIG',
+  'Fenomena Geografi Sehari-hari – Peta Tematik & Analisis Keruangan (Spatial Analysis)',
+];
+
+const DEFAULT_SOSIOLOGI_MATERI_OPTIONS = [
+  'Hubungan dan Gejala Sosial – Bentuk Interaksi Sosial & Masyarakat Multikultural',
+  'Kelompok Sosial, Kesetaraan, dan Konflik Sosial – Konflik Sosial dan Penanganan Konflik',
+  'Perubahan Sosial dan Globalisasi – Globalisasi dan Dampak Globalisasi',
+  'Kelompok Sosial, Kesetaraan, dan Konflik Sosial – Stratifikasi & Ketidaksetaraan Sosial',
+  'Penelitian Sosial – Metode Penelitian Sosial & Interpretasi Data Survei',
+  'Perubahan Sosial dan Globalisasi – Sikap Kritis terhadap Globalisasi & Kearifan Lokal',
+  'Sosiologi sebagai Ilmu – Ciri-Ciri & Manfaat Sosiologi dalam Pemecahan Masalah Sosial',
+  'Hubungan dan Gejala Sosial – Pembentukan Kepribadian & Peran Lembaga Sosial',
+  'Kelompok Sosial, Kesetaraan, dan Konflik Sosial – Dinamika Kelompok Sosial & Partikularisme',
+  'Perubahan Sosial dan Globalisasi – Bentuk & Teori Perubahan Sosial',
+];
+
+const DEFAULT_SEJARAH_MATERI_OPTIONS = [
+  'Pergerakan Nasional sampai Proklamasi Kemerdekaan – Peristiwa dan Makna Proklamasi',
+  'Revolusi Kemerdekaan sampai Demokrasi Terpimpin – Perjuangan Mempertahankan Kemerdekaan',
+  'Perlawanan terhadap Bangsa Eropa – Kebijakan Kolonial & Perlawanan Rakyat Nusantara',
+  'Periode Kerajaan Hindu-Buddha dan Islam – Masuknya Kebudayaan & Kehidupan Politik-Ekonomi',
+  'Orde Baru sampai Reformasi – Kronologi Lahirnya Reformasi & Peran Mahasiswa',
+  'Pengantar Ilmu Sejarah – Konsep Dasar Sejarah (Diakronik, Sinkronik, Perubahan & Keberlanjutan)',
+  'Pergerakan Nasional sampai Proklamasi Kemerdekaan – Politik Etis & Organisasi Pergerakan Nasional',
+  'Revolusi Kemerdekaan sampai Demokrasi Terpimpin – Kehidupan Politik Masa Demokrasi Liberal & Terpimpin',
+  'Orde Baru sampai Reformasi – Kehidupan Masyarakat & Kebijakan Masa Orde Baru',
+  'Perlawanan terhadap Bangsa Eropa – Proses Kedatangan Bangsa Barat & Monopoli VOC',
+];
+
+const DEFAULT_ANTROPOLOGI_MATERI_OPTIONS = [
+  'Etnografi – Metode dan Proses Penelitian Etnografi (Observasi Partisipatif)',
+  'Kearifan Lokal dan Tradisi Lisan – Peran Kearifan Lokal dalam Pengelolaan Lingkungan',
+  'Masyarakat Multikultural – Keberagaman Budaya & Integrasi Nasional',
+  'Perubahan Sosial Budaya – Akulturasi, Asimilasi, dan Respon Masyarakat',
+  'Antropologi Sosial dan Antropologi Budaya – Sistem Kekerabatan & Antropologi Terapan',
+  'Pengantar dan Ruang Lingkup Antropologi – Prinsip Dasar (Emik, Etik, Relativisme Budaya)',
+  'Kearifan Lokal dan Tradisi Lisan – Jenis & Fungsi Tradisi Lisan di Era Modern',
+  'Masyarakat Multikultural – Tantangan Etnosentrisme, Prasangka, & Multikulturalisme',
+  'Etnografi – Penerapan Berpikir Etnografis dalam Kehidupan Sehari-hari',
+  'Pengantar dan Ruang Lingkup Antropologi – Tujuh Unsur Kebudayaan Universal & Wujud Budaya',
+];
+
+const DEFAULT_PKWU_MATERI_OPTIONS = [
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Perencanaan Produksi & Biaya (HPP & BEP)',
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Pemasaran Produk (Marketing Mix & Digital Marketing)',
+  'Pengelolaan Usaha – Hak atas Kekayaan Intelektual (HaKI)',
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Pengembangan Desain & Kemasan Produk',
+  'Pengelolaan Usaha – Pelaporan Keuangan (Laba Rugi & Arus Kas)',
+  'Pengelolaan Usaha – Analisis Peluang Usaha (SWOT & BMC)',
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Pengendalian Mutu Produk (Quality Assurance)',
+  'Pengelolaan Usaha – Proposal Usaha & Studi Kelayakan Bisnis',
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Saluran Distribusi & Rantai Pasok',
+  'Kegiatan Produksi, Pemasaran, dan Distribusi – Pengembangan Prototipe & Proses Produksi',
+];
 
 export const GeneratePanel: React.FC = () => {
   const location = useLocation();
@@ -20,16 +247,239 @@ export const GeneratePanel: React.FC = () => {
   // Form States
   const [subtes, setSubtes] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [difficulty, setDifficulty] = useState<'EASY' | 'MEDIUM' | 'HOTS'>('MEDIUM');
-  const [tipe, setTipe] = useState<'PG' | 'PGK' | 'BS' | 'ISIAN'>('PG');
-  const [jumlah, setJumlah] = useState(5);
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  
+  // Difficulty States
+  const [difficultyMode, setDifficultyMode] = useState<'distribution' | 'single'>('distribution');
+  const [singleDifficulty, setSingleDifficulty] = useState<'EASY' | 'MEDIUM' | 'HOTS'>('MEDIUM');
+  const [diffEasy, setDiffEasy] = useState(30);
+  const [diffMedium, setDiffMedium] = useState(50);
+  const [diffHots, setDiffHots] = useState(20);
+
+  // Type Distribution States
+  const [selectedTypes, setSelectedTypes] = useState<Array<'PG' | 'PGK' | 'BS' | 'ISIAN'>>(['PG', 'PGK', 'BS']);
+  const [typeCompMode, setTypeCompMode] = useState<'even' | 'tka' | 'custom'>('even');
+  const [typesAlloc, setTypesAlloc] = useState<Record<string, number>>({
+    PG: 34,
+    PGK: 33,
+    BS: 33,
+    ISIAN: 0,
+  });
+
+  const [reuseStimulus, setReuseStimulus] = useState(true);
+  const [questionsPerStimulus, setQuestionsPerStimulus] = useState(5);
+  const [jumlah, setJumlah] = useState(30);
+  const [selectedModel, setSelectedModel] = useState('stubia-v.1');
+  const [includeImagePrompts, setIncludeImagePrompts] = useState(false);
+
+  // Number of stimuli calculated from jumlah and questionsPerStimulus
+  const stimulusCount = reuseStimulus && jumlah >= 2
+    ? Math.ceil(jumlah / questionsPerStimulus)
+    : Math.max(1, jumlah);
+
+  const subtesLower = (subtes || selectedSkill?.subtes || '').toLowerCase();
+  const isKimiaSubtest = subtesLower.includes('kimia');
+  const isFisikaSubtest = subtesLower.includes('fisika');
+  const isBiologiSubtest = subtesLower.includes('biologi');
+  const isPpknSubtest = subtesLower.includes('ppkn') || subtesLower.includes('pancasila');
+  const isEkonomiSubtest = subtesLower.includes('ekonomi');
+  const isGeografiSubtest = subtesLower.includes('geografi');
+  const isSosiologiSubtest = subtesLower.includes('sosiologi');
+  const isSejarahSubtest = subtesLower.includes('sejarah');
+  const isAntropologiSubtest = subtesLower.includes('antropologi');
+  const isPkwuSubtest = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+  const isBindoLanjutSubtest = subtesLower.includes('indo') && (subtesLower.includes('lanjut') || subtesLower.includes('tingkat lanjut'));
+  const isMtkLanjutSubtest = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+  const isMtkSubtest = subtesLower.includes('matematika') && !isMtkLanjutSubtest;
+  const isBingLanjutSubtest = (subtesLower.includes('inggris') || subtesLower.includes('english')) && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+  const isBingSubtest = (subtesLower.includes('inggris') || subtesLower.includes('english')) && !isBingLanjutSubtest;
+
+  const getActiveMateriOptions = () => {
+    if (isKimiaSubtest) return DEFAULT_KIMIA_MATERI_OPTIONS;
+    if (isFisikaSubtest) return DEFAULT_FISIKA_MATERI_OPTIONS;
+    if (isBiologiSubtest) return DEFAULT_BIOLOGI_MATERI_OPTIONS;
+    if (isPpknSubtest) return DEFAULT_PPKN_MATERI_OPTIONS;
+    if (isEkonomiSubtest) return DEFAULT_EKONOMI_MATERI_OPTIONS;
+    if (isGeografiSubtest) return DEFAULT_GEOGRAFI_MATERI_OPTIONS;
+    if (isSosiologiSubtest) return DEFAULT_SOSIOLOGI_MATERI_OPTIONS;
+    if (isSejarahSubtest) return DEFAULT_SEJARAH_MATERI_OPTIONS;
+    if (isAntropologiSubtest) return DEFAULT_ANTROPOLOGI_MATERI_OPTIONS;
+    if (isPkwuSubtest) return DEFAULT_PKWU_MATERI_OPTIONS;
+    if (isMtkLanjutSubtest) return DEFAULT_MTK_LANJUT_MATERI_OPTIONS;
+    if (isMtkSubtest) return DEFAULT_MTK_MATERI_OPTIONS;
+    if (isBingLanjutSubtest) return DEFAULT_BING_LANJUT_MATERI_OPTIONS;
+    if (isBingSubtest) return DEFAULT_BING_MATERI_OPTIONS;
+    if (isBindoLanjutSubtest) return DEFAULT_BINDO_LANJUT_MATERI_OPTIONS;
+    return DEFAULT_BINDO_MATERI_OPTIONS;
+  };
+
+  // Materi States (Per-Stimulus allocation)
+  const [materiMode, setMateriMode] = useState<'default' | 'custom'>('default');
+  const [materiList, setMateriList] = useState<string[]>(DEFAULT_BINDO_MATERI_OPTIONS.slice(0, 6));
+
+  // Sync materiList length with stimulusCount
+  useEffect(() => {
+    const activeOptions = getActiveMateriOptions();
+    setMateriList(prev => {
+      if (prev.length === stimulusCount) return prev;
+      const updated = [...prev];
+      if (updated.length < stimulusCount) {
+        while (updated.length < stimulusCount) {
+          const nextOpt = activeOptions[updated.length % activeOptions.length];
+          updated.push(nextOpt);
+        }
+        return updated;
+      } else {
+        return updated.slice(0, stimulusCount);
+      }
+    });
+  }, [stimulusCount, isKimiaSubtest, isFisikaSubtest, isBiologiSubtest, isPpknSubtest, isEkonomiSubtest, isGeografiSubtest, isSosiologiSubtest, isSejarahSubtest, isAntropologiSubtest, isPkwuSubtest, isMtkSubtest, isMtkLanjutSubtest, isBingSubtest, isBingLanjutSubtest, isBindoLanjutSubtest]);
+
+  const handleMateriChange = (sIdx: number, val: string) => {
+    setMateriList(prev => {
+      const copy = [...prev];
+      copy[sIdx] = val;
+      return copy;
+    });
+  };
+
+  const handleApplyDiverseMateri = () => {
+    const activeOptions = getActiveMateriOptions();
+    const diverse = Array.from({ length: stimulusCount }, (_, i) =>
+      activeOptions[i % activeOptions.length]
+    );
+    setMateriList(diverse);
+    toast.success(`${stimulusCount} materi bervariasi otomatis disetel!`);
+  };
 
   // Generation Results
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [meta, setMeta] = useState<any>(null);
+
+  const CACHE_KEY = 'stubia_ai_generated_questions_cache';
+
+  // Restore cached questions from localStorage on component mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+          setGeneratedQuestions(parsed.questions);
+          if (parsed.selectedIndices && Array.isArray(parsed.selectedIndices)) {
+            setSelectedIndices(parsed.selectedIndices);
+          } else {
+            setSelectedIndices(parsed.questions.map((_: any, i: number) => i));
+          }
+          if (parsed.meta) setMeta(parsed.meta);
+          if (parsed.subtes) setSubtes(parsed.subtes);
+          toast.success(`Draft dipulihkan: ${parsed.questions.length} soal tersimpan dari sesi sebelumnya!`, { id: 'cache-restore' });
+        }
+      }
+    } catch (e) {
+      console.warn('[Cache] Failed to load draft questions:', e);
+    }
+  }, []);
+
+  // Save generated questions to localStorage whenever updated
+  useEffect(() => {
+    try {
+      if (generatedQuestions.length > 0) {
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            questions: generatedQuestions,
+            selectedIndices,
+            meta,
+            subtes,
+            timestamp: Date.now(),
+          })
+        );
+      }
+    } catch (e) {
+      console.warn('[Cache] Failed to save draft questions:', e);
+    }
+  }, [generatedQuestions, selectedIndices, meta, subtes]);
+
+  const handleClearDraft = () => {
+    localStorage.removeItem(CACHE_KEY);
+    setGeneratedQuestions([]);
+    setSelectedIndices([]);
+    setMeta(null);
+    toast.success('Draft soal berhasil dihapus!');
+  };
+
+  // Live Elapsed Timer State during Generation
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    let interval: any;
+    if (isGenerating) {
+      setElapsedSeconds(0);
+      interval = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  const formatTimer = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const getStageInfo = (secs: number) => {
+    if (secs < 3) {
+      return {
+        title: 'Menganalisis Parameter Soal',
+        desc: 'Menyiapkan subtes, topik cakupan, dan kalkulasi distribusi tingkat kesulitan...',
+        step: 1,
+      };
+    }
+    if (secs < 12) {
+      return {
+        title: 'Merumuskan Teks Wacana / Stimulus',
+        desc: 'Menyusun stimulus wacana berkualitas tinggi yang otentik dan kontekstual...',
+        step: 2,
+      };
+    }
+    if (secs < 25) {
+      return {
+        title: 'Menyusun Butir Soal & Pengecoh',
+        desc: 'Merumuskan pertanyaan analitis, opsi A–E yang masuk akal, dan format evaluasi...',
+        step: 3,
+      };
+    }
+    if (secs < 45) {
+      return {
+        title: 'Memformulasikan Kunci, Pembahasan & Prompt Visual',
+        desc: 'Menulis pembahasan terstruktur langkah demi langkah dan deskripsi prompt gambar...',
+        step: 4,
+      };
+    }
+    if (secs < 75) {
+      return {
+        title: 'Validasi JSON & Konsolidasi Batch',
+        desc: 'Memvalidasi struktur skema 14 kolom data dan merapikan paket soal...',
+        step: 5,
+      };
+    }
+    return {
+      title: 'Finalisasi Paket Soal',
+      desc: 'Proses hampir selesai. Sedang memvalidasi seluruh butir soal sebelum ditampilkan...',
+      step: 6,
+    };
+  };
+
+  // Helper calculation for Difficulty sum
+  const diffSum = diffEasy + diffMedium + diffHots;
+
+  // Helper calculation for Types sum
+  const typesSum = selectedTypes.reduce((acc, t) => acc + (typesAlloc[t] || 0), 0);
 
   // Load Skills
   useEffect(() => {
@@ -58,7 +508,104 @@ export const GeneratePanel: React.FC = () => {
   const handleSkillSelect = (skill: AISkill) => {
     setSelectedSkill(skill);
     setSubtes(skill.subtes);
-    setSelectedTopics(skill.topikCakupanJson.slice(0, 2)); // default pick first 2 topics
+    setSelectedTopics(skill.topikCakupanJson.slice(0, 5));
+    const skillSubtes = skill.subtes.toLowerCase();
+    const isKimia = skillSubtes.includes('kimia');
+    const isFisika = skillSubtes.includes('fisika');
+    const isBiologi = skillSubtes.includes('biologi');
+    const isPpkn = skillSubtes.includes('ppkn') || skillSubtes.includes('pancasila');
+    const isEkonomi = skillSubtes.includes('ekonomi');
+    const isGeografi = skillSubtes.includes('geografi');
+    const isSosiologi = skillSubtes.includes('sosiologi');
+    const isSejarah = skillSubtes.includes('sejarah');
+    const isAntropologi = skillSubtes.includes('antropologi');
+    const isPkwu = skillSubtes.includes('pkwu') || skillSubtes.includes('kewirausahaan');
+    const isBindoLanjut = skillSubtes.includes('indo') && (skillSubtes.includes('lanjut') || skillSubtes.includes('tingkat lanjut'));
+    const isMtkLanjut = skillSubtes.includes('matematika') && (skillSubtes.includes('tingkat lanjut') || skillSubtes.includes('lanjut'));
+    const isMtk = skillSubtes.includes('matematika') && !isMtkLanjut;
+    const isBingLanjut = (skillSubtes.includes('inggris') || skillSubtes.includes('english')) && (skillSubtes.includes('tingkat lanjut') || skillSubtes.includes('lanjut'));
+    const isBing = (skillSubtes.includes('inggris') || skillSubtes.includes('english')) && !isBingLanjut;
+
+    if (isKimia) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_KIMIA_MATERI_OPTIONS[i % DEFAULT_KIMIA_MATERI_OPTIONS.length]));
+    } else if (isFisika) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_FISIKA_MATERI_OPTIONS[i % DEFAULT_FISIKA_MATERI_OPTIONS.length]));
+    } else if (isBiologi) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BIOLOGI_MATERI_OPTIONS[i % DEFAULT_BIOLOGI_MATERI_OPTIONS.length]));
+    } else if (isPpkn) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PPKN_MATERI_OPTIONS[i % DEFAULT_PPKN_MATERI_OPTIONS.length]));
+    } else if (isEkonomi) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_EKONOMI_MATERI_OPTIONS[i % DEFAULT_EKONOMI_MATERI_OPTIONS.length]));
+    } else if (isGeografi) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_GEOGRAFI_MATERI_OPTIONS[i % DEFAULT_GEOGRAFI_MATERI_OPTIONS.length]));
+    } else if (isSosiologi) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_SOSIOLOGI_MATERI_OPTIONS[i % DEFAULT_SOSIOLOGI_MATERI_OPTIONS.length]));
+    } else if (isSejarah) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_SEJARAH_MATERI_OPTIONS[i % DEFAULT_SEJARAH_MATERI_OPTIONS.length]));
+    } else if (isAntropologi) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_ANTROPOLOGI_MATERI_OPTIONS[i % DEFAULT_ANTROPOLOGI_MATERI_OPTIONS.length]));
+    } else if (isPkwu) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PKWU_MATERI_OPTIONS[i % DEFAULT_PKWU_MATERI_OPTIONS.length]));
+    } else if (isMtkLanjut) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_MTK_LANJUT_MATERI_OPTIONS[i % DEFAULT_MTK_LANJUT_MATERI_OPTIONS.length]));
+    } else if (isMtk) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_MTK_MATERI_OPTIONS[i % DEFAULT_MTK_MATERI_OPTIONS.length]));
+    } else if (isBingLanjut) {
+      setJumlah(25);
+      setIncludeImagePrompts(false);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BING_LANJUT_MATERI_OPTIONS[i % DEFAULT_BING_LANJUT_MATERI_OPTIONS.length]));
+    } else if (isBing) {
+      setJumlah(25);
+      setIncludeImagePrompts(false);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BING_MATERI_OPTIONS[i % DEFAULT_BING_MATERI_OPTIONS.length]));
+    } else if (isBindoLanjut) {
+      setJumlah(25);
+      setIncludeImagePrompts(false);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BINDO_LANJUT_MATERI_OPTIONS[i % DEFAULT_BINDO_LANJUT_MATERI_OPTIONS.length]));
+    } else {
+      setJumlah(30);
+      const count = Math.ceil(30 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BINDO_MATERI_OPTIONS[i % DEFAULT_BINDO_MATERI_OPTIONS.length]));
+    }
   };
 
   const handleTopicToggle = (topic: string) => {
@@ -67,6 +614,270 @@ export const GeneratePanel: React.FC = () => {
     } else {
       setSelectedTopics([...selectedTopics, topic]);
     }
+  };
+
+  const rebalanceTypesAlloc = (types: Array<'PG' | 'PGK' | 'BS' | 'ISIAN'>, mode: 'even' | 'tka' | 'custom') => {
+    if (types.length === 0) return;
+    
+    if (mode === 'tka' && types.includes('PG') && types.includes('BS') && types.includes('PGK')) {
+      const is25Paket = isKimiaSubtest || isFisikaSubtest || isBiologiSubtest || isMtkSubtest || isMtkLanjutSubtest || isBingSubtest || isBingLanjutSubtest || isBindoLanjutSubtest;
+      if (is25Paket) {
+        setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 }); // 16 PG, 5 BS, 4 PGK (total 25)
+      } else {
+        setTypesAlloc({ PG: 67, BS: 20, PGK: 13, ISIAN: 0 }); // 20 PG, 6 BS, 4 PGK (total 30)
+      }
+      return;
+    }
+
+    if (mode === 'even' || mode === 'tka') {
+      const basePct = Math.floor(100 / types.length);
+      const remainder = 100 - basePct * types.length;
+      const newAlloc: Record<string, number> = { PG: 0, PGK: 0, BS: 0, ISIAN: 0 };
+      types.forEach((t, idx) => {
+        newAlloc[t] = basePct + (idx === 0 ? remainder : 0);
+      });
+      setTypesAlloc(newAlloc);
+    }
+  };
+
+  const handleTypeToggle = (t: 'PG' | 'PGK' | 'BS' | 'ISIAN') => {
+    let updated: Array<'PG' | 'PGK' | 'BS' | 'ISIAN'>;
+    if (selectedTypes.includes(t)) {
+      if (selectedTypes.length === 1) {
+        toast.error('Pilih minimal 1 tipe soal!');
+        return;
+      }
+      updated = selectedTypes.filter(item => item !== t);
+    } else {
+      updated = [...selectedTypes, t];
+    }
+    setSelectedTypes(updated);
+    rebalanceTypesAlloc(updated, typeCompMode);
+  };
+
+  const handleSelectAllTypes = () => {
+    const all: Array<'PG' | 'PGK' | 'BS' | 'ISIAN'> = ['PG', 'PGK', 'BS', 'ISIAN'];
+    setSelectedTypes(all);
+    rebalanceTypesAlloc(all, 'even');
+  };
+
+  const handleSelectTkaPreset = () => {
+    const tkaTypes: Array<'PG' | 'PGK' | 'BS' | 'ISIAN'> = ['PG', 'PGK', 'BS'];
+    setSelectedTypes(tkaTypes);
+    setTypeCompMode('tka');
+    const subtesLower = (subtes || selectedSkill?.subtes || '').toLowerCase();
+    const isKimia = subtesLower.includes('kimia');
+    const isFisika = subtesLower.includes('fisika');
+    const isBiologi = subtesLower.includes('biologi');
+    const isPpkn = subtesLower.includes('ppkn') || subtesLower.includes('pancasila');
+    const isEkonomi = subtesLower.includes('ekonomi');
+    const isGeografi = subtesLower.includes('geografi');
+    const isSosiologi = subtesLower.includes('sosiologi');
+    const isSejarah = subtesLower.includes('sejarah');
+    const isAntropologi = subtesLower.includes('antropologi');
+    const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+    const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
+    const isBingLanjut = (subtesLower.includes('inggris') || subtesLower.includes('english')) && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isBing = (subtesLower.includes('inggris') || subtesLower.includes('english')) && !isBingLanjut;
+
+    if (isKimia) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_KIMIA_MATERI_OPTIONS[i % DEFAULT_KIMIA_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Kimia Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isFisika) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_FISIKA_MATERI_OPTIONS[i % DEFAULT_FISIKA_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Fisika Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isBiologi) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BIOLOGI_MATERI_OPTIONS[i % DEFAULT_BIOLOGI_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Biologi Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isPpkn) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PPKN_MATERI_OPTIONS[i % DEFAULT_PPKN_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA PPKn Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isEkonomi) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_EKONOMI_MATERI_OPTIONS[i % DEFAULT_EKONOMI_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Ekonomi Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isGeografi) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_GEOGRAFI_MATERI_OPTIONS[i % DEFAULT_GEOGRAFI_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Geografi Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isSosiologi) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_SOSIOLOGI_MATERI_OPTIONS[i % DEFAULT_SOSIOLOGI_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Sosiologi Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isSejarah) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_SEJARAH_MATERI_OPTIONS[i % DEFAULT_SEJARAH_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Sejarah Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isAntropologi) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_ANTROPOLOGI_MATERI_OPTIONS[i % DEFAULT_ANTROPOLOGI_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Antropologi Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isPkwu) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PKWU_MATERI_OPTIONS[i % DEFAULT_PKWU_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA PKWU Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isMtkLanjut) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_MTK_LANJUT_MATERI_OPTIONS[i % DEFAULT_MTK_LANJUT_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA MTK Lanjut Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isMtk) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_MTK_MATERI_OPTIONS[i % DEFAULT_MTK_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Matematika Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isBingLanjut) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BING_LANJUT_MATERI_OPTIONS[i % DEFAULT_BING_LANJUT_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA B. Inggris Lanjut Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4)');
+    } else if (isBing) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BING_MATERI_OPTIONS[i % DEFAULT_BING_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA B. Inggris Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4)');
+    } else if (isBindoLanjut) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(28);
+      setDiffMedium(44);
+      setDiffHots(28);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BINDO_LANJUT_MATERI_OPTIONS[i % DEFAULT_BINDO_LANJUT_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA B. Indonesia Lanjut Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4)');
+    } else {
+      setJumlah(30);
+      setTypesAlloc({ PG: 67, BS: 20, PGK: 13, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(30);
+      setDiffMedium(50);
+      setDiffHots(20);
+      setReuseStimulus(true);
+      const count = Math.ceil(30 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_BINDO_MATERI_OPTIONS[i % DEFAULT_BINDO_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA B. Indonesia Aktif: 30 Soal (Mudah 30%, Sedang 50%, Sulit 20%) & (PG 20, BS 6, PGK 4)');
+    }
+  };
+
+  const setDifficultyPreset = (easy: number, med: number, hots: number) => {
+    setDifficultyMode('distribution');
+    setDiffEasy(easy);
+    setDiffMedium(med);
+    setDiffHots(hots);
   };
 
   const triggerGenerate = async () => {
@@ -78,8 +889,22 @@ export const GeneratePanel: React.FC = () => {
       toast.error('Pilih minimal 1 topik cakupan!');
       return;
     }
-    if (jumlah < 1 || jumlah > 20) {
-      toast.error('Jumlah soal harus berada di antara 1 dan 20!');
+    if (selectedTypes.length === 0) {
+      toast.error('Pilih minimal 1 tipe soal!');
+      return;
+    }
+    if (jumlah < 1 || jumlah > 50) {
+      toast.error('Jumlah soal harus berada di antara 1 dan 50!');
+      return;
+    }
+
+    if (difficultyMode === 'distribution' && diffSum !== 100) {
+      toast.error(`Total persentase kesulitan harus 100% (saat ini: ${diffSum}%)`);
+      return;
+    }
+
+    if (typeCompMode === 'custom' && typesSum !== 100) {
+      toast.error(`Total persentase tipe soal harus 100% (saat ini: ${typesSum}%)`);
       return;
     }
 
@@ -91,9 +916,21 @@ export const GeneratePanel: React.FC = () => {
     const configPayload = {
       subtes,
       topik: selectedTopics,
-      difficulty,
-      tipe,
+      materi: materiList[0] || undefined,
+      materiList: materiList && materiList.length > 0 ? materiList : undefined,
+      difficulty: difficultyMode === 'single' ? singleDifficulty : 'MEDIUM',
+      difficultyDistribution: difficultyMode === 'distribution' ? {
+        EASY: diffEasy,
+        MEDIUM: diffMedium,
+        HOTS: diffHots,
+      } : undefined,
+      tipe: selectedTypes[0],
+      tipes: selectedTypes,
+      typesDistribution: typesAlloc,
       jumlah,
+      reuseStimulus,
+      questionsPerStimulus,
+      includeImagePrompts,
     };
 
     try {
@@ -101,15 +938,10 @@ export const GeneratePanel: React.FC = () => {
       setGeneratedQuestions(result.questions);
       setMeta(result.meta);
       
-      // Auto-select questions that are SAFE or WARNING (exclude BLOCKED)
-      const safeIndices: number[] = [];
-      result.questions.forEach((q, idx) => {
-        if (q.similarityStatus !== 'BLOCKED') {
-          safeIndices.push(idx);
-        }
-      });
-      setSelectedIndices(safeIndices);
-      toast.success('Soal berhasil digenerate AI!');
+      // Auto-select ALL generated questions by default so Export and Save always include all questions
+      const allIndices = result.questions.map((_, idx) => idx);
+      setSelectedIndices(allIndices);
+      toast.success(`${result.questions.length} soal berhasil digenerate AI!`);
     } catch (err: any) {
       toast.error(err.message || 'Gagal generate soal via AI.');
     } finally {
@@ -132,26 +964,36 @@ export const GeneratePanel: React.FC = () => {
   };
 
   const handleSelectAllSafe = () => {
-    const safeIndices: number[] = [];
-    generatedQuestions.forEach((q, idx) => {
-      if (q.similarityStatus !== 'BLOCKED') {
-        safeIndices.push(idx);
-      }
-    });
-    setSelectedIndices(safeIndices);
+    const allIndices = generatedQuestions.map((_, idx) => idx);
+    setSelectedIndices(allIndices);
   };
 
   const handleSaveSelected = async () => {
-    if (selectedIndices.length === 0) {
+    const indicesToSave = selectedIndices.length > 0 ? selectedIndices : generatedQuestions.map((_, idx) => idx);
+    if (indicesToSave.length === 0) {
       toast.error('Pilih minimal 1 soal untuk disimpan!');
       return;
     }
 
-    const selectedQuestions = selectedIndices.map(idx => generatedQuestions[idx]);
+    const selectedQuestions = indicesToSave.map(idx => generatedQuestions[idx]);
     const payload = {
       questions: selectedQuestions,
       skillId: selectedSkill?.id,
-      config: { subtes, topik: selectedTopics, difficulty, tipe, jumlah },
+      config: {
+        subtes,
+        topik: selectedTopics,
+        materi: materiList[0] || undefined,
+        materiList: materiMode === 'custom' ? materiList : undefined,
+        difficulty: difficultyMode === 'single' ? singleDifficulty : 'MEDIUM',
+        difficultyDistribution: difficultyMode === 'distribution' ? { EASY: diffEasy, MEDIUM: diffMedium, HOTS: diffHots } : undefined,
+        tipe: selectedTypes[0],
+        tipes: selectedTypes,
+        typesDistribution: typesAlloc,
+        jumlah,
+        reuseStimulus,
+        questionsPerStimulus,
+        includeImagePrompts,
+      },
       modelUsed: selectedModel,
       tokensUsed: meta?.tokensUsed,
       costEstimateUsd: meta?.costEstimateUsd,
@@ -160,10 +1002,112 @@ export const GeneratePanel: React.FC = () => {
 
     try {
       const result = await aiGeneratorApi.saveQuestions(payload);
+      localStorage.removeItem(CACHE_KEY);
       toast.success(`${result.saved} soal berhasil disimpan ke Bank Soal!`);
       navigate('/questions');
     } catch (err: any) {
       toast.error(err.message || 'Gagal menyimpan soal.');
+    }
+  };
+
+  const handleExportTkaExcel = async () => {
+    const indicesToExport = selectedIndices.length > 0 
+      ? selectedIndices 
+      : generatedQuestions.map((_, idx) => idx);
+
+    if (indicesToExport.length === 0) {
+      toast.error('Tidak ada soal untuk di-export!');
+      return;
+    }
+
+    const selectedQuestions = indicesToExport.map(idx => generatedQuestions[idx]);
+    const subtesLower = (subtes || selectedSkill?.subtes || '').toLowerCase();
+    const isKimia = subtesLower.includes('kimia');
+    const isFisika = subtesLower.includes('fisika');
+    const isBiologi = subtesLower.includes('biologi');
+    const isPpkn = subtesLower.includes('ppkn') || subtesLower.includes('pancasila');
+    const isEkonomi = subtesLower.includes('ekonomi');
+    const isGeografi = subtesLower.includes('geografi');
+    const isSosiologi = subtesLower.includes('sosiologi');
+    const isSejarah = subtesLower.includes('sejarah');
+    const isAntropologi = subtesLower.includes('antropologi');
+    const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+    const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
+    const isBingLanjut = (subtesLower.includes('inggris') || subtesLower.includes('english')) && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
+    const isBing = (subtesLower.includes('inggris') || subtesLower.includes('english')) && !isBingLanjut;
+    const prefix = isKimia 
+      ? 'TKA_KIMIA_TRYOUT' 
+      : (isFisika 
+        ? 'TKA_FISIKA_TRYOUT' 
+        : (isBiologi 
+          ? 'TKA_BIOLOGI_TRYOUT' 
+          : (isPpkn
+            ? 'TKA_PPKN_TRYOUT'
+            : (isEkonomi
+              ? 'TKA_EKONOMI_TRYOUT'
+              : (isGeografi
+                ? 'TKA_GEOGRAFI_TRYOUT'
+                : (isSosiologi
+                  ? 'TKA_SOSIOLOGI_TRYOUT'
+                  : (isSejarah
+                    ? 'TKA_SEJARAH_TRYOUT'
+                    : (isAntropologi
+                      ? 'TKA_ANTROPOLOGI_TRYOUT'
+                      : (isPkwu
+                        ? 'TKA_PKWU_TRYOUT'
+                        : (isMtkLanjut 
+                          ? 'TKA_MATEMATIKA_LANJUT_TRYOUT' 
+                          : (isMtk 
+                            ? 'TKA_MATEMATIKA_TRYOUT' 
+                            : (isBingLanjut 
+                              ? 'TKA_BING_LANJUT_TRYOUT' 
+                              : (isBing 
+                                ? 'TKA_BING_TRYOUT' 
+                                : (isBindoLanjut 
+                                  ? 'TKA_BINDO_LANJUT_TRYOUT' 
+                                  : 'TKA_BINDO_TRYOUT'))))))))))))));
+    const label = isKimia 
+      ? 'TKA Kimia' 
+      : (isFisika 
+        ? 'TKA Fisika' 
+        : (isBiologi 
+          ? 'TKA Biologi' 
+          : (isPpkn
+            ? 'TKA PPKn'
+            : (isEkonomi
+              ? 'TKA Ekonomi'
+              : (isGeografi
+                ? 'TKA Geografi'
+                : (isSosiologi
+                  ? 'TKA Sosiologi'
+                  : (isSejarah
+                    ? 'TKA Sejarah'
+                    : (isAntropologi
+                      ? 'TKA Antropologi'
+                      : (isPkwu
+                        ? 'TKA PKWU'
+                        : (isMtkLanjut 
+                          ? 'TKA MTK Lanjut' 
+                          : (isMtk 
+                            ? 'TKA Matematika' 
+                            : (isBingLanjut 
+                              ? 'TKA B. Inggris Lanjut' 
+                              : (isBing 
+                                ? 'TKA B. Inggris' 
+                                : (isBindoLanjut 
+                                  ? 'TKA Bindo Lanjut' 
+                                  : 'TKA'))))))))))))));
+    const toastId = toast.loading(`Mengkompilasi ${selectedQuestions.length} soal Excel ${label}...`);
+
+    try {
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const fileName = `${prefix}_${dateStr}`;
+      await aiGeneratorApi.exportTkaExcel(selectedQuestions, fileName);
+      toast.success(`${selectedQuestions.length} soal Excel ${label} berhasil diunduh!`, { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengekspor Excel.', { id: toastId });
     }
   };
 
@@ -177,7 +1121,7 @@ export const GeneratePanel: React.FC = () => {
             <h2 className="text-xl font-bold text-[#0F172A]">AI Question Generator Panel</h2>
           </div>
           <p className="text-xs font-semibold text-[#64748B] mt-1">
-            Buat soal ujian secara instan berdasarkan skill prompt khusus akademik dan lakukan kurasi anti-duplikasi real-time.
+            Buat soal ujian secara instan berbasis stimulus teks, atur proporsi tingkat kesulitan dan komposisi tipe soal secara merata.
           </p>
         </div>
         
@@ -195,9 +1139,19 @@ export const GeneratePanel: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
         {/* Left Config Column (40% / 4 cols) */}
         <div className="lg:col-span-4 bg-white border border-[#CBD5E1] border-l-4 border-l-[#7C3AED] rounded-2xl p-6 shadow-sm space-y-5">
-          <h3 className="text-sm font-bold text-[#7C3AED] flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4" /> 1. Konfigurasi Generate
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-[#7C3AED] flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4" /> 1. Konfigurasi Generate
+            </h3>
+            <button
+              type="button"
+              onClick={handleSelectTkaPreset}
+              className="text-[11px] font-bold text-[#7C3AED] bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg transition-colors"
+              title="Setel otomatis 30 soal TKA (Mudah 30%, Sedang 50%, Sulit 20%)"
+            >
+              ⚡ Preset Paket TKA
+            </button>
+          </div>
 
           {/* Skill Selector */}
           <div>
@@ -222,7 +1176,7 @@ export const GeneratePanel: React.FC = () => {
 
           {/* Subtest (Autofilled / Override) */}
           <Input
-            label="Subtes UTBK (Auto-fill)"
+            label="Subtes UTBK / TKA (Auto-fill)"
             value={subtes}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubtes(e.target.value)}
             placeholder="Subtes akademik..."
@@ -231,9 +1185,26 @@ export const GeneratePanel: React.FC = () => {
 
           {/* Topic Select Checkboxes */}
           <div>
-            <label className="block text-xs font-bold text-[#64748B] mb-2">
-              Pilih Topik Cakupan
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-[#64748B]">
+                Pilih Topik Cakupan
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSkill) {
+                    if (selectedTopics.length === selectedSkill.topikCakupanJson.length) {
+                      setSelectedTopics([selectedSkill.topikCakupanJson[0]]);
+                    } else {
+                      setSelectedTopics([...selectedSkill.topikCakupanJson]);
+                    }
+                  }
+                }}
+                className="text-[11px] text-[#7C3AED] hover:underline font-semibold"
+              >
+                {selectedSkill && selectedTopics.length === selectedSkill.topikCakupanJson.length ? 'Pilih 1' : 'Pilih Semua'}
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto border border-[#CBD5E1] rounded-xl p-3 bg-[#F8FAFC]">
               {selectedSkill?.topikCakupanJson.map((topic, idx) => (
                 <button
@@ -252,83 +1223,514 @@ export const GeneratePanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Difficulty and Type selection (Grid) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#64748B] mb-2">Kesulitan</label>
-              <div className="space-y-1.5">
+          {/* Per-Stimulus Materi Specification Section */}
+          <div className="space-y-3 pt-3 border-t border-[#CBD5E1]/60">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold text-[#0F172A]">
+                  Fokus Materi ({stimulusCount} Teks Stimulus)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (materiMode === 'default') {
+                      setMateriMode('custom');
+                    } else {
+                      setMateriMode('default');
+                    }
+                  }}
+                  className="text-[10px] text-[#7C3AED] font-bold underline"
+                >
+                  {materiMode === 'default' ? 'Pilih per Stimulus' : 'Ganti ke Default (Otomatis)'}
+                </button>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                materiMode === 'default' ? 'bg-slate-100 text-slate-700' : 'bg-purple-100 text-purple-800'
+              }`}>
+                {materiMode === 'default' ? '✨ Default (Otomatis)' : `🎯 ${stimulusCount} Materi Khusus`}
+              </span>
+            </div>
+
+            {materiMode === 'default' ? (
+              <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#CBD5E1] space-y-2">
+                <div className="flex items-center justify-between text-xs text-[#64748B]">
+                  <span className="font-semibold text-[11px] leading-relaxed">
+                    Setiap <b className="text-[#0F172A]">{stimulusCount} teks wacana</b> akan diisi materi beragam secara otomatis oleh AI (Puisi, Dongeng, Cerpen, Berita, Editorial, Artikel Ilmiah, dll).
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMateriMode('custom')}
+                    className="text-[11px] font-bold text-[#7C3AED] hover:underline shrink-0 ml-3 bg-white px-2 py-1 rounded border border-purple-200 shadow-sm"
+                  >
+                    Atur per Stimulus ✏️
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 bg-[#F8FAFC] p-3.5 rounded-xl border border-[#CBD5E1]">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-[#64748B] font-semibold leading-relaxed">
+                    Pilih/ketik materi untuk masing-masing <b className="text-[#0F172A]">{stimulusCount} stimulus</b> ({questionsPerStimulus} soal per teks):
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleApplyDiverseMateri}
+                    className="text-[10px] text-[#7C3AED] bg-white hover:bg-purple-50 border border-purple-200 px-2 py-1 rounded font-bold transition-colors shadow-sm shrink-0"
+                    title="Isi otomatis dengan variasi genre teks berbeda"
+                  >
+                    ⚡ Acak Beragam
+                  </button>
+                </div>
+
+                {/* Stimulus Materi Cards List */}
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {Array.from({ length: stimulusCount }).map((_, sIdx) => {
+                    const startNum = sIdx * questionsPerStimulus + 1;
+                    const endNum = Math.min(jumlah, (sIdx + 1) * questionsPerStimulus);
+                    const activeOptions = getActiveMateriOptions();
+                    const currentMateri = materiList[sIdx] || activeOptions[sIdx % activeOptions.length];
+
+                    return (
+                      <div
+                        key={sIdx}
+                        className="bg-white border border-[#CBD5E1] rounded-xl p-3 space-y-2 shadow-sm hover:border-purple-300 transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="h-5 w-5 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                              {sIdx + 1}
+                            </span>
+                            <span className="text-xs font-bold text-[#0F172A]">
+                              Stimulus #{sIdx + 1}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                            Soal No. {startNum} – {endNum}
+                          </span>
+                        </div>
+
+                        {/* Input custom or selected genre */}
+                        <input
+                          type="text"
+                          value={currentMateri}
+                          onChange={(e) => handleMateriChange(sIdx, e.target.value)}
+                          placeholder="Ketik materi spesifik..."
+                          className="w-full h-8 px-2.5 border border-[#CBD5E1] rounded-lg text-xs bg-[#F8FAFC] text-[#0F172A] focus:bg-white focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold"
+                        />
+
+                        {/* Quick Genre Chips for this slot */}
+                        <div className="flex flex-wrap gap-1">
+                          {activeOptions.slice(0, 8).map((chip, cIdx) => (
+                            <button
+                              key={cIdx}
+                              type="button"
+                              onClick={() => handleMateriChange(sIdx, chip)}
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border transition-all ${
+                                currentMateri === chip
+                                  ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-xs'
+                                  : 'bg-slate-50 text-[#64748B] border-[#CBD5E1] hover:bg-purple-50 hover:border-purple-300'
+                              }`}
+                            >
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Difficulty Distribution Section */}
+          <div className="space-y-3 pt-3 border-t border-[#CBD5E1]/60">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold text-[#0F172A]">Distribusi Tingkat Kesulitan</label>
+                <button
+                  type="button"
+                  onClick={() => setDifficultyMode(difficultyMode === 'distribution' ? 'single' : 'distribution')}
+                  className="text-[10px] text-[#7C3AED] font-bold underline"
+                >
+                  {difficultyMode === 'distribution' ? 'Ganti ke Tunggal' : 'Ganti ke Proporsional (%)'}
+                </button>
+              </div>
+              {difficultyMode === 'distribution' && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  diffSum === 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse'
+                }`}>
+                  Total: {diffSum}%
+                </span>
+              )}
+            </div>
+
+            {difficultyMode === 'distribution' ? (
+              <div className="space-y-2.5 bg-[#F8FAFC] p-3 rounded-xl border border-[#CBD5E1]">
+                {/* Presets */}
+                <div className="flex flex-wrap gap-1.5 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setDifficultyPreset(30, 50, 20)}
+                    className="text-[10px] px-2 py-1 bg-white border border-purple-200 rounded font-semibold text-[#5B21B6] hover:bg-purple-50"
+                  >
+                    ⚡ Standar TKA (30/50/20%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDifficultyPreset(33, 34, 33)}
+                    className="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    ⚖️ Rata (33/34/33%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDifficultyPreset(10, 40, 50)}
+                    className="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    🔥 HOTS (10/40/50%)
+                  </button>
+                </div>
+
+                {/* 3 Inputs Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-emerald-700 mb-1 text-center">
+                      MUDAH (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={diffEasy}
+                      onChange={(e) => setDiffEasy(parseInt(e.target.value) || 0)}
+                      className="w-full h-9 px-2 border border-[#CBD5E1] rounded-lg text-center font-bold text-xs bg-white text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                    />
+                    <span className="block text-[10px] text-center text-[#64748B] mt-0.5 font-medium">
+                      ~{Math.max(1, Math.round((diffEasy / 100) * jumlah))} soal
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-amber-700 mb-1 text-center">
+                      SEDANG (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={diffMedium}
+                      onChange={(e) => setDiffMedium(parseInt(e.target.value) || 0)}
+                      className="w-full h-9 px-2 border border-[#CBD5E1] rounded-lg text-center font-bold text-xs bg-white text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                    />
+                    <span className="block text-[10px] text-center text-[#64748B] mt-0.5 font-medium">
+                      ~{Math.max(1, Math.round((diffMedium / 100) * jumlah))} soal
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-red-700 mb-1 text-center">
+                      SULIT (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={diffHots}
+                      onChange={(e) => setDiffHots(parseInt(e.target.value) || 0)}
+                      className="w-full h-9 px-2 border border-[#CBD5E1] rounded-lg text-center font-bold text-xs bg-white text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                    />
+                    <span className="block text-[10px] text-center text-[#64748B] mt-0.5 font-medium">
+                      ~{Math.max(1, Math.round((diffHots / 100) * jumlah))} soal
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-4 p-3 bg-[#F8FAFC] rounded-xl border border-[#CBD5E1]">
                 {['EASY', 'MEDIUM', 'HOTS'].map((diff) => (
                   <label key={diff} className="flex items-center gap-2 text-xs font-semibold text-[#0F172A] cursor-pointer">
                     <input
                       type="radio"
-                      name="difficulty"
-                      checked={difficulty === diff}
-                      onChange={() => setDifficulty(diff as any)}
+                      name="singleDifficulty"
+                      checked={singleDifficulty === diff}
+                      onChange={() => setSingleDifficulty(diff as any)}
                       className="text-[#7C3AED] focus:ring-[#7C3AED]"
                     />
-                    {diff}
+                    {diff === 'EASY' ? 'Mudah' : diff === 'MEDIUM' ? 'Sedang' : 'Sulit (HOTS)'}
                   </label>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Multi-Type Selection & Composition Section */}
+          <div className="space-y-3 pt-3 border-t border-[#CBD5E1]/60">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-[#0F172A]">Komposisi Tipe Soal</label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleSelectAllTypes}
+                  className="text-[10px] px-2 py-0.5 rounded font-bold transition-all bg-purple-50 text-[#7C3AED] hover:bg-purple-100 border border-purple-200"
+                  title="Pilih seluruh 4 tipe soal"
+                >
+                  Pilih Semua
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeCompMode('even');
+                    rebalanceTypesAlloc(selectedTypes, 'even');
+                    toast.success('Komposisi disetel bagi rata');
+                  }}
+                  className={`text-[10px] px-2 py-0.5 rounded font-bold transition-all ${
+                    typeCompMode === 'even' ? 'bg-[#7C3AED] text-white' : 'bg-purple-50 text-[#7C3AED]'
+                  }`}
+                  title="Bagi rata jumlah soal ke semua tipe yang dipilih"
+                >
+                  ⚖️ Bagi Rata
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeCompMode('custom');
+                  }}
+                  className={`text-[10px] px-2 py-0.5 rounded font-bold transition-all ${
+                    typeCompMode === 'custom' ? 'bg-[#7C3AED] text-white' : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  🛠️ Kustom (%)
+                </button>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#64748B] mb-2">Tipe Soal</label>
-              <div className="space-y-1.5">
-                {['PG', 'PGK', 'BS', 'ISIAN'].map((t) => (
-                  <label key={t} className="flex items-center gap-2 text-xs font-semibold text-[#0F172A] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="tipe"
-                      checked={tipe === t}
-                      onChange={() => setTipe(t as any)}
-                      className="text-[#7C3AED] focus:ring-[#7C3AED]"
-                    />
-                    {t}
-                  </label>
-                ))}
-              </div>
+            <div className="space-y-2 bg-[#F8FAFC] p-3 rounded-xl border border-[#CBD5E1]">
+              {[
+                { key: 'PG', label: 'Pilihan Ganda (PG)', code: 'multiple_choice' },
+                { key: 'PGK', label: 'PG Kompleks (PGK)', code: 'complex_mc_tf' },
+                { key: 'BS', label: 'PG Jawaban Jamak (BS)', code: 'complex_mc_multi' },
+                { key: 'ISIAN', label: 'Isian Singkat', code: 'ISIAN' },
+              ].map((item) => {
+                const isChecked = selectedTypes.includes(item.key as any);
+                const pct = typesAlloc[item.key] || 0;
+                const approxCount = isChecked ? Math.max(1, Math.round((pct / 100) * jumlah)) : 0;
+
+                return (
+                  <div key={item.key} className="flex items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#0F172A] cursor-pointer flex-1">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleTypeToggle(item.key as any)}
+                        className="rounded text-[#7C3AED] focus:ring-[#7C3AED]"
+                      />
+                      <div>
+                        <span>{item.label}</span>
+                        <span className="block text-[10px] text-[#64748B] font-normal">{item.code}</span>
+                      </div>
+                    </label>
+
+                    {isChecked && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {typeCompMode === 'custom' ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={pct}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                setTypesAlloc({ ...typesAlloc, [item.key]: val });
+                              }}
+                              className="w-14 h-7 px-1.5 border border-[#CBD5E1] rounded text-center text-xs font-bold bg-white text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                            />
+                            <span className="text-[10px] text-[#64748B]">%</span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-[#5B21B6] bg-purple-100 px-2 py-0.5 rounded">
+                            {pct}% (~{approxCount} soal)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {typeCompMode === 'custom' && (
+                <div className="flex justify-between items-center pt-2 border-t border-[#CBD5E1]/60 text-xs font-bold">
+                  <span className="text-[#64748B]">Total Komposisi Tipe:</span>
+                  <span className={typesSum === 100 ? 'text-emerald-600' : 'text-red-600 animate-pulse'}>
+                    {typesSum}% {typesSum === 100 ? '✅' : '(Harus 100%)'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Model and Qty */}
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Jumlah Soal (1-20)"
-              type="number"
-              min={1}
-              max={20}
-              value={jumlah}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJumlah(parseInt(e.target.value) || 5)}
-              className="focus:ring-[#7C3AED]"
-            />
-
-            <div>
-              <label className="block text-xs font-bold text-[#64748B] mb-1.5">Model AI</label>
-              <select
-                value={selectedModel}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedModel(e.target.value)}
-                className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold"
-              >
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-              </select>
+          {/* Stimulus Reuse Toggle & Configuration */}
+          <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs font-bold text-[#5B21B6] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={reuseStimulus}
+                  onChange={(e) => setReuseStimulus(e.target.checked)}
+                  className="rounded text-[#7C3AED] focus:ring-[#7C3AED]"
+                />
+                <span>Kelompokkan Soal per Teks Stimulus (Reuse Stimulus)</span>
+              </label>
+              {reuseStimulus && (
+                <span className="text-[10px] font-bold text-[#5B21B6] bg-purple-200/70 px-2 py-0.5 rounded-full">
+                  ~{Math.ceil(jumlah / questionsPerStimulus)} Teks Wacana
+                </span>
+              )}
             </div>
+
+            {reuseStimulus && (
+              <div className="pl-5 space-y-2 pt-1 border-t border-purple-200/60">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-[#5B21B6]">1 Stimulus untuk berapa soal?</span>
+                  <div className="flex items-center gap-1">
+                    {[2, 3, 4, 5, 6].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setQuestionsPerStimulus(num)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                          questionsPerStimulus === num
+                            ? 'bg-[#7C3AED] text-white shadow-sm'
+                            : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-[#6B21A8] leading-relaxed">
+                  1 teks wacana (250–300 kata) dipakai untuk <strong>{questionsPerStimulus} soal berturut-turut</strong>. (Total {jumlah} soal = <strong>{Math.ceil(jumlah / questionsPerStimulus)} teks wacana berbeda</strong>).
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Model and Qty with Presets */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Input
+                  label="Jumlah Soal (1–50)"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={jumlah}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJumlah(parseInt(e.target.value) || 5)}
+                  className="focus:ring-[#7C3AED]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#64748B] mb-1.5">Model AI</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedModel(e.target.value)}
+                  className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold"
+                >
+                  <option value="stubia-v.1">stubia-v.1</option>
+                  <option value="claude-sonnet-4.6">claude-sonnet-4.6</option>
+                  <option value="gemini-flash-3.8">gemini-flash-3.8</option>
+                  <option value="gh/gpt-4o">gh/gpt-4o</option>
+                  <option value="claude-opus-4.6">claude-opus-4.6</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Count Presets */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#64748B] mr-1">Preset Jumlah:</span>
+              {[5, 10, 15, 20, 25, 30].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => setJumlah(num)}
+                  className={`text-xs px-2.5 py-1 rounded-md font-bold transition-all ${
+                    jumlah === num
+                      ? 'bg-[#7C3AED] text-white shadow-sm'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  {num} {num === 25 ? '🔥 (Mapel Pilihan)' : num === 30 ? '🔥 (Mapel Wajib)' : 'Soal'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Optional Image Prompt Generation */}
+          <div className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-[#7C3AED]" />
+                <label className="text-xs font-bold text-[#0F172A]">
+                  Prompt Gambar / Infografis (Opsional)
+                </label>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeImagePrompts}
+                  onChange={(e) => setIncludeImagePrompts(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7C3AED]"></div>
+              </label>
+            </div>
+            <p className="text-[11px] text-[#64748B] font-medium leading-relaxed">
+              Jika aktif, AI akan membuat deskripsi prompt visual detail untuk soal/wacana yang menggunakan infografis, grafik data, diagram, atau ilustrasi. Kolom <b className="text-[#0F172A]">PROMPT GAMBAR</b> akan otomatis disertakan di ujung kanan Excel.
+            </p>
           </div>
 
           {/* Prompt Preview Accordion */}
-          <PromptPreview skill={selectedSkill} config={{ subtes, topik: selectedTopics, difficulty, tipe, jumlah }} />
+          <PromptPreview
+            skill={selectedSkill}
+            config={{
+              subtes,
+              topik: selectedTopics,
+              materi: materiList[0] || undefined,
+              materiList: materiMode === 'custom' ? materiList : undefined,
+              difficulty: difficultyMode === 'single' ? singleDifficulty : 'MEDIUM',
+              difficultyDistribution: difficultyMode === 'distribution' ? { EASY: diffEasy, MEDIUM: diffMedium, HOTS: diffHots } : undefined,
+              tipe: selectedTypes[0],
+              tipes: selectedTypes,
+              typesDistribution: typesAlloc,
+              jumlah,
+              reuseStimulus,
+              questionsPerStimulus,
+              includeImagePrompts,
+            }}
+          />
 
           {/* Submit Trigger */}
           <Button
             variant="ai"
-            className="w-full h-11 text-base font-bold shadow-md flex items-center justify-center gap-2"
+            className="w-full h-12 text-base font-bold shadow-md flex items-center justify-center gap-2 transition-all"
             onClick={triggerGenerate}
-            isLoading={isGenerating}
+            disabled={isGenerating}
           >
-            <Sparkles className="h-5 w-5 shrink-0" />
-            <span>Generate Soal AI</span>
+            {isGenerating ? (
+              <>
+                <Clock className="h-5 w-5 shrink-0 animate-spin text-white" />
+                <span>Membuat Soal... ({formatTimer(elapsedSeconds)})</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-5 w-5 shrink-0" />
+                <span>Generate {jumlah} Soal AI ({selectedTypes.join(', ')})</span>
+              </>
+            )}
           </Button>
         </div>
 
@@ -361,17 +1763,89 @@ export const GeneratePanel: React.FC = () => {
           )}
 
           {isGenerating ? (
-            // Loading State
-            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-16 text-center shadow-sm flex flex-col items-center justify-center space-y-4">
-              <div className="flex space-x-2">
-                <div className="h-3 w-3 bg-[#7C3AED] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="h-3 w-3 bg-[#7C3AED] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="h-3 w-3 bg-[#7C3AED] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            // Loading State with Live Timer & Dynamic Step Tracking
+            <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 shadow-md flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-300">
+              {/* Header Badge with Live Timer */}
+              <div className="flex items-center gap-2.5 bg-purple-100/80 border border-purple-300 text-[#5B21B6] px-4 py-2 rounded-full shadow-sm">
+                <Clock className="h-4 w-4 text-[#7C3AED] animate-spin" />
+                <span className="text-xs font-bold uppercase tracking-wider">Waktu Berjalan:</span>
+                <span className="text-sm font-black font-mono bg-white text-[#7C3AED] px-2.5 py-0.5 rounded-md border border-purple-200 shadow-inner">
+                  {formatTimer(elapsedSeconds)}
+                </span>
               </div>
-              <p className="text-sm font-bold text-[#0F172A] animate-pulse">✨ AI sedang merumuskan soal UTBK...</p>
-              <p className="text-xs text-[#64748B] font-semibold leading-relaxed">
-                Mohon tunggu, kami sedang menyusun stimulus, opsi jawaban, dan menjalankan analisis kesamaan trigram di database bank soal.
-              </p>
+
+              {/* Central Glowing Icon */}
+              <div className="relative">
+                <div className="h-20 w-20 rounded-3xl bg-gradient-to-tr from-[#7C3AED] to-purple-400 flex items-center justify-center text-white shadow-xl shadow-purple-500/25 animate-pulse">
+                  <Sparkles className="h-10 w-10 animate-spin" style={{ animationDuration: '6s' }} />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow border border-purple-200">
+                  <Cpu className="h-4 w-4 text-[#7C3AED] animate-bounce" />
+                </div>
+              </div>
+
+              {/* Dynamic Step Text */}
+              <div className="text-center space-y-2 max-w-md">
+                <h4 className="text-base font-extrabold text-[#0F172A] flex items-center justify-center gap-2">
+                  <span>{getStageInfo(elapsedSeconds).title}</span>
+                </h4>
+                <p className="text-xs text-[#64748B] font-semibold leading-relaxed">
+                  {getStageInfo(elapsedSeconds).desc}
+                </p>
+              </div>
+
+              {/* Live Steps Indicator Bar */}
+              <div className="w-full max-w-md bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-3.5 space-y-2.5">
+                <div className="flex justify-between items-center text-[11px] font-bold">
+                  <span className="text-[#64748B]">Target: {jumlah} Soal ({selectedTypes.join(', ')})</span>
+                  <span className="text-[#7C3AED]">
+                    {jumlah > 6 && reuseStimulus 
+                      ? `${Math.ceil(jumlah / questionsPerStimulus)} Batch Paralel Aktif` 
+                      : '1 Batch Aktif'}
+                  </span>
+                </div>
+
+                {/* Progress Bar Shimmer */}
+                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden relative">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#7C3AED] via-purple-400 to-[#7C3AED] rounded-full transition-all duration-1000 relative overflow-hidden"
+                    style={{ width: `${Math.min(95, Math.max(10, elapsedSeconds * 6))}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                  </div>
+                </div>
+
+                {/* Step List Pills */}
+                <div className="grid grid-cols-5 gap-1.5 pt-1">
+                  {[
+                    '1. Inisiasi',
+                    '2. Stimulus',
+                    '3. Soal & Opsi',
+                    '4. Bahasan',
+                    '5. Validasi',
+                  ].map((label, idx) => {
+                    const stepNum = idx + 1;
+                    const isDone = getStageInfo(elapsedSeconds).step > stepNum;
+                    const isCurrent = getStageInfo(elapsedSeconds).step === stepNum;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`text-[9px] font-bold text-center py-1 px-0.5 rounded transition-all truncate ${
+                          isDone
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : isCurrent
+                            ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300 animate-pulse'
+                            : 'bg-white text-slate-400 border border-slate-200'
+                        }`}
+                        title={label}
+                      >
+                        {label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : generatedQuestions.length === 0 ? (
             // Empty State
@@ -387,6 +1861,21 @@ export const GeneratePanel: React.FC = () => {
           ) : (
             // Results list and action bar
             <div className="space-y-4">
+              {/* Draft Persisted Banner */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <span>Draft Tersimpan Otomatis: Soal Anda aman dan tidak akan hilang meski halaman di-refresh.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearDraft}
+                  className="text-[11px] font-bold text-red-600 hover:text-red-700 hover:underline px-2 py-1 shrink-0 ml-2"
+                >
+                  🗑️ Hapus Draft
+                </button>
+              </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#64748B]">
                   Terpilih: {selectedIndices.length} dari {generatedQuestions.length} soal
@@ -430,14 +1919,24 @@ export const GeneratePanel: React.FC = () => {
                 <span className="text-xs font-bold text-[#0F172A] hidden sm:block">
                   Simpan soal terpilih ke database bank soal.
                 </span>
-                <Button
-                  variant="ai"
-                  className="w-full sm:w-auto font-bold shadow-md flex items-center gap-2"
-                  onClick={handleSaveSelected}
-                >
-                  <Save className="h-4 w-4 shrink-0" />
-                  <span>Simpan {selectedIndices.length} Soal Terpilih → Bank</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    className="font-bold flex items-center gap-2 border-[#CBD5E1] text-[#7C3AED] hover:bg-purple-50 hover:border-purple-300"
+                    onClick={handleExportTkaExcel}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 shrink-0" />
+                    <span>Export Excel TKA ({selectedIndices.length > 0 ? selectedIndices.length : generatedQuestions.length} Soal)</span>
+                  </Button>
+                  <Button
+                    variant="ai"
+                    className="font-bold shadow-md flex items-center gap-2"
+                    onClick={handleSaveSelected}
+                  >
+                    <Save className="h-4 w-4 shrink-0" />
+                    <span>Simpan {selectedIndices.length > 0 ? selectedIndices.length : generatedQuestions.length} Soal → Bank</span>
+                  </Button>
+                </div>
               </div>
             </div>
           )}

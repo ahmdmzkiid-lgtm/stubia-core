@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getCashflowEntries,
   createCashflowEntry,
+  updateCashflowEntry,
   generatePayroll,
   getPayrolls,
   payPayroll,
@@ -17,6 +18,7 @@ router.use(authenticate);
 // Finance and Payroll routes
 router.get('/cashflow', requireRole(['super_admin', 'finance_officer']), getCashflowEntries);
 router.post('/cashflow', requireRole(['super_admin', 'finance_officer']), createCashflowEntry);
+router.put('/cashflow/:id', requireRole(['super_admin', 'finance_officer']), updateCashflowEntry);
 
 router.get('/payroll', requireRole(['super_admin', 'finance_officer']), getPayrolls);
 router.post('/payroll/generate', requireRole(['super_admin', 'finance_officer']), generatePayroll);

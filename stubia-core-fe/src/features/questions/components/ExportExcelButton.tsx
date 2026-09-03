@@ -23,11 +23,14 @@ export const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ filters, t
     const toastId = toast.loading('Sedang mengkompilasi file Excel...');
 
     try {
-      // Build query params from current filters
+      // Build query params from current filters (exclude page and limit so all questions are exported)
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, val]) => {
-        if (val !== undefined && val !== '') params.append(key, String(val));
+        if (key !== 'page' && key !== 'limit' && val !== undefined && val !== '') {
+          params.append(key, String(val));
+        }
       });
+      params.append('limit', '500');
 
       // Use auth token from the store directly (correct pattern)
       const token = useAuthStore.getState().accessToken;

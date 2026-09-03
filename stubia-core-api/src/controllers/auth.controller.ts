@@ -5,8 +5,8 @@ import prisma from '../prisma';
 import { AppError } from '../errors/AppError';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
-const ACCESS_TOKEN_EXPIRY = '15m';
-const REFRESH_TOKEN_EXPIRY = '7d';
+const ACCESS_TOKEN_EXPIRY = '7d';
+const REFRESH_TOKEN_EXPIRY = '30d';
 
 const generateTokens = (user: { id: string; role: string; email: string }) => {
   const jwtSecret = process.env.JWT_SECRET || 'stubia-core-secret-jwt-key-2026';

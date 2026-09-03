@@ -10,7 +10,7 @@ import { Textarea } from '../../../components/shared/Textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
-import { Plus, Wallet2, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { Plus, Wallet2, ArrowDownRight, ArrowUpRight, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const transactionSchema = zod.object({
@@ -18,6 +18,7 @@ const transactionSchema = zod.object({
   category: zod.enum(['Operasional', 'Marketing', 'Payroll', 'Revenue', 'AI_COST']),
   amount: zod.number().min(1, 'Jumlah nominal wajib diisi'),
   description: zod.string().min(5, 'Keterangan minimal berisi 5 karakter'),
+  entryDate: zod.string().optional(),
 });
 
 type TransactionFormFields = zod.infer<typeof transactionSchema>;
@@ -26,6 +27,7 @@ export const CashflowLedger: React.FC = () => {
   const [entries, setEntries] = useState<CashflowEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<CashflowEntry | null>(null);
 
   const {
     register,
@@ -38,8 +40,34 @@ export const CashflowLedger: React.FC = () => {
     defaultValues: {
       type: 'kredit',
       category: 'Operasional',
+      entryDate: '',
     },
   });
+
+  useEffect(() => {
+    if (editingEntry) {
+      const dateObj = new Date(editingEntry.entryDate);
+      const offset = dateObj.getTimezoneOffset();
+      const localDate = new Date(dateObj.getTime() - offset * 60000);
+      const formattedDate = localDate.toISOString().slice(0, 16);
+
+      reset({
+        type: editingEntry.type,
+        category: editingEntry.category as any,
+        amount: editingEntry.amount,
+        description: editingEntry.description,
+        entryDate: formattedDate,
+      });
+    } else {
+      reset({
+        type: 'kredit',
+        category: 'Operasional',
+        amount: undefined,
+        description: '',
+        entryDate: '',
+      });
+    }
+  }, [editingEntry, reset]);
 
   const fetchEntries = async () => {
     setIsLoading(true);
@@ -67,9 +95,20 @@ export const CashflowLedger: React.FC = () => {
 
   const onSubmit = async (data: TransactionFormFields) => {
     try {
-      await financeApi.createCashflowEntry(data);
-      toast.success('Transaksi keuangan berhasil dicatat!');
+      const payload = {
+        ...data,
+        entryDate: data.entryDate ? new Date(data.entryDate).toISOString() : undefined,
+      };
+
+      if (editingEntry) {
+        await financeApi.updateCashflowEntry(editingEntry.id, payload);
+        toast.success('Transaksi keuangan berhasil diperbarui!');
+      } else {
+        await financeApi.createCashflowEntry(payload);
+        toast.success('Transaksi keuangan berhasil dicatat!');
+      }
       setIsModalOpen(false);
+      setEditingEntry(null);
       reset();
       fetchEntries();
     } catch (err: any) {
@@ -155,6 +194,24 @@ export const CashflowLedger: React.FC = () => {
         <span className="text-[10px] font-bold text-[#64748B]">{row.recordedBy?.name || '-'}</span>
       ),
     },
+    {
+      header: 'Aksi',
+      accessor: 'id',
+      className: 'w-[10%] text-center',
+      render: (_: any, row: CashflowEntry) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setEditingEntry(row);
+            setIsModalOpen(true);
+          }}
+          className="text-xs font-bold text-[#1B3FAB] hover:bg-blue-50 border border-transparent hover:border-blue-200 inline-flex items-center gap-1 py-1 px-2.5 h-auto"
+        >
+          <Edit className="h-3.5 w-3.5" /> Edit
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -169,7 +226,10 @@ export const CashflowLedger: React.FC = () => {
         <Button
           variant="primary"
           size="sm"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingEntry(null);
+            setIsModalOpen(true);
+          }}
           className="text-xs font-bold"
         >
           <Plus className="h-4.5 w-4.5 mr-1.5" /> Catat Transaksi Manual
@@ -185,7 +245,14 @@ export const CashflowLedger: React.FC = () => {
       />
 
       {/* Modal recording */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Catat Transaksi Buku Kas">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingEntry(null);
+        }}
+        title={editingEntry ? "Edit Transaksi Buku Kas" : "Catat Transaksi Buku Kas"}
+      >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-1">
           {/* Cashflow Type */}
           <div>
@@ -246,12 +313,27 @@ export const CashflowLedger: React.FC = () => {
             {...register('description')}
           />
 
+          {/* Custom entry date */}
+          <div>
+            <label className="block text-xs font-semibold text-[#64748B] mb-1.5">
+              Tanggal & Waktu Transaksi (Kosongkan jika sekarang)
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
+              {...register('entryDate')}
+            />
+          </div>
+
           {/* Submit */}
           <div className="flex justify-end gap-2.5 pt-4 border-t border-[#CBD5E1]/40 mt-6">
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingEntry(null);
+              }}
               className="text-xs font-bold border-[#CBD5E1] hover:bg-[#F1F5F9]"
             >
               Batal
@@ -262,7 +344,7 @@ export const CashflowLedger: React.FC = () => {
               isLoading={isSubmitting}
               className="text-xs font-bold bg-[#1B3FAB] hover:bg-[#15328A] text-white shadow-md"
             >
-              Bukukan Transaksi
+              {editingEntry ? 'Perbarui Transaksi' : 'Bukukan Transaksi'}
             </Button>
           </div>
         </form>

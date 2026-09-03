@@ -262,6 +262,22 @@ export const SkillLibrary: React.FC = () => {
                 <option value="Pengetahuan dan Pemahaman Umum">Pengetahuan dan Pemahaman Umum</option>
                 <option value="Kemampuan Penalaran Umum">Kemampuan Penalaran Umum</option>
                 <option value="Kemampuan Kuantitatif">Kemampuan Kuantitatif</option>
+                <option value="TKA Bahasa Indonesia Wajib">TKA Bahasa Indonesia Wajib</option>
+                <option value="TKA Kimia Pilihan">TKA Kimia Pilihan</option>
+                <option value="TKA Matematika Wajib">TKA Matematika Wajib</option>
+                <option value="TKA Bahasa Inggris Wajib">TKA Bahasa Inggris Wajib</option>
+                <option value="TKA Matematika Tingkat Lanjut">TKA Matematika Tingkat Lanjut</option>
+                <option value="TKA Bahasa Indonesia Tingkat Lanjut">TKA Bahasa Indonesia Tingkat Lanjut</option>
+                <option value="TKA Bahasa Inggris Tingkat Lanjut">TKA Bahasa Inggris Tingkat Lanjut</option>
+                <option value="TKA Fisika Pilihan">TKA Fisika Pilihan</option>
+                <option value="TKA Biologi Pilihan">TKA Biologi Pilihan</option>
+                <option value="TKA PPKn">TKA PPKn</option>
+                <option value="TKA Ekonomi Pilihan">TKA Ekonomi Pilihan</option>
+                <option value="TKA Geografi Pilihan">TKA Geografi Pilihan</option>
+                <option value="TKA Sosiologi Pilihan">TKA Sosiologi Pilihan</option>
+                <option value="TKA Sejarah Pilihan">TKA Sejarah Pilihan</option>
+                <option value="TKA Antropologi Pilihan">TKA Antropologi Pilihan</option>
+                <option value="TKA PKWU Pilihan">TKA PKWU Pilihan</option>
               </select>
             </div>
 

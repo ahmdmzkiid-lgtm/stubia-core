@@ -12,6 +12,7 @@ export interface PackageConfig {
     HOTS: number; // e.g. 30
   };
   includeAi: boolean;
+  model?: string; // Optional AI model filter (e.g. 'opus-4.6' | 'sonnet-4.6')
   minSimilarityThreshold: number; // e.g. 0.40 (max similarity allowed between questions in package)
 }
 
@@ -49,6 +50,7 @@ export class PackageGeneratorService {
       topicsDistribution,
       difficultyDistribution,
       includeAi,
+      model,
       minSimilarityThreshold,
     } = config;
 
@@ -60,6 +62,11 @@ export class PackageGeneratorService {
 
     if (!includeAi) {
       where.source = QuestionSource.MANUAL;
+    } else if (model) {
+      where.OR = [
+        { source: QuestionSource.MANUAL },
+        { source: QuestionSource.AI_GENERATED, modelUsed: model },
+      ];
     }
 
     const candidates = await prisma.question.findMany({ where });

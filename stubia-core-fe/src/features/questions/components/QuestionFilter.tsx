@@ -51,6 +51,22 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
             <option value="Pengetahuan dan Pemahaman Umum">Pengetahuan dan Pemahaman Umum</option>
             <option value="Kemampuan Penalaran Umum">Kemampuan Penalaran Umum</option>
             <option value="Kemampuan Kuantitatif">Kemampuan Kuantitatif</option>
+            <option value="TKA Bahasa Indonesia Wajib">TKA Bahasa Indonesia Wajib</option>
+            <option value="TKA Kimia Pilihan">TKA Kimia Pilihan</option>
+            <option value="TKA Matematika Wajib">TKA Matematika Wajib</option>
+            <option value="TKA Bahasa Inggris Wajib">TKA Bahasa Inggris Wajib</option>
+            <option value="TKA Matematika Tingkat Lanjut">TKA Matematika Tingkat Lanjut</option>
+            <option value="TKA Bahasa Indonesia Tingkat Lanjut">TKA Bahasa Indonesia Tingkat Lanjut</option>
+            <option value="TKA Bahasa Inggris Tingkat Lanjut">TKA Bahasa Inggris Tingkat Lanjut</option>
+            <option value="TKA Fisika Pilihan">TKA Fisika Pilihan</option>
+            <option value="TKA Biologi Pilihan">TKA Biologi Pilihan</option>
+            <option value="TKA PPKn">TKA PPKn</option>
+            <option value="TKA Ekonomi Pilihan">TKA Ekonomi Pilihan</option>
+            <option value="TKA Geografi Pilihan">TKA Geografi Pilihan</option>
+            <option value="TKA Sosiologi Pilihan">TKA Sosiologi Pilihan</option>
+            <option value="TKA Sejarah Pilihan">TKA Sejarah Pilihan</option>
+            <option value="TKA Antropologi Pilihan">TKA Antropologi Pilihan</option>
+            <option value="TKA PKWU Pilihan">TKA PKWU Pilihan</option>
           </select>
         </div>
 
@@ -87,15 +103,21 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-[#CBD5E1]/50 gap-4">
+      <div className="flex flex-wrap items-center justify-between pt-2 border-t border-[#CBD5E1]/50 gap-4">
         {/* Source filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-[#64748B]">Sumber:</span>
           {['', 'MANUAL', 'AI_GENERATED'].map((src) => (
             <button
               key={src}
               type="button"
-              onClick={() => handleSelectChange('source', src)}
+              onClick={() => {
+                const nextFilters = { ...filters, source: (src || undefined) as any, page: 1 };
+                if (src !== 'AI_GENERATED') {
+                  delete nextFilters.modelUsed;
+                }
+                onChange(nextFilters);
+              }}
               className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition-colors ${
                 (filters.source || '') === src
                   ? src === 'AI_GENERATED'
@@ -107,6 +129,21 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
               {src === '' ? 'Semua' : src === 'AI_GENERATED' ? '✨ AI-Generated' : '✏️ Manual'}
             </button>
           ))}
+
+          {filters.source === 'AI_GENERATED' && (
+            <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-[#CBD5E1]">
+              <span className="text-xs font-bold text-[#64748B]">Model:</span>
+              <select
+                value={filters.modelUsed || ''}
+                onChange={(e) => handleSelectChange('modelUsed', e.target.value)}
+                className="h-8 px-2 border border-[#CBD5E1] rounded-lg text-xs bg-white text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#7C3AED] font-semibold"
+              >
+                <option value="">Semua Model</option>
+                <option value="opus-4.6">Claude Opus 4.6</option>
+                <option value="sonnet-4.6">Claude Sonnet-4.6</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Clear Trigger */}

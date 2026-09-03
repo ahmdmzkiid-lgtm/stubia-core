@@ -17,9 +17,17 @@ export interface AISkill {
 export interface GenerateConfig {
   subtes: string;
   topik: string[];
+  materi?: string;
+  materiList?: string[];
   difficulty: 'EASY' | 'MEDIUM' | 'HOTS';
-  tipe: 'PG' | 'PGK' | 'BS' | 'ISIAN';
+  difficultyDistribution?: { EASY: number; MEDIUM: number; HOTS: number };
+  tipe?: 'PG' | 'PGK' | 'BS' | 'ISIAN';
+  tipes?: Array<'PG' | 'PGK' | 'BS' | 'ISIAN'>;
+  typesDistribution?: Record<string, number>;
   jumlah: number;
+  reuseStimulus?: boolean;
+  questionsPerStimulus?: number;
+  includeImagePrompts?: boolean;
 }
 
 export interface GeneratedQuestion {
@@ -38,6 +46,13 @@ export interface GeneratedQuestion {
   topik: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HOTS';
   tipe: 'PG' | 'PGK' | 'BS' | 'ISIAN';
+  
+  // TKA-specific fields
+  materi?: string;
+  tipe_soal_tka?: string;
+  tingkat_kesulitan?: string;
+  label_kolom?: string;
+  prompt_gambar?: string | null;
   
   // Similarity status added by backend check
   similarityStatus: 'SAFE' | 'WARNING' | 'BLOCKED';

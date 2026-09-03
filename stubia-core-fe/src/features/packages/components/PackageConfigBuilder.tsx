@@ -18,12 +18,29 @@ const SUBTEST_TOPICS: Record<string, string[]> = {
   'Pengetahuan dan Pemahaman Umum': ['Sinonim Antonim', 'Makna Kata', 'Kelompok Kata', 'Bahasa Panda'],
   'Kemampuan Penalaran Umum': ['Logika Analitis', 'Logika Silogisme', 'Pola Barisan Bilangan', 'Analisis Gambar'],
   'Kemampuan Kuantitatif': ['Operasi Aritmatika', 'Peluang Kejadian', 'Persamaan Garis', 'Himpunan'],
+  'TKA Bahasa Indonesia Wajib': ['Pemahaman Tekstual', 'Pemahaman Inferensial', 'Evaluasi dan Apresiasi'],
+  'TKA Kimia Pilihan': ['Kimia Dasar', 'Kimia Analitik', 'Kimia Fisik', 'Kimia Organik'],
+  'TKA Matematika Wajib': ['Bilangan', 'Aljabar', 'Geometri dan Pengukuran', 'Trigonometri', 'Data dan Peluang'],
+  'TKA Bahasa Inggris Wajib': ['Pemahaman Tekstual', 'Pemahaman Inferensial', 'Evaluasi dan Apresiasi'],
+  'TKA Matematika Tingkat Lanjut': ['Aljabar', 'Geometri dan Pengukuran', 'Trigonometri'],
+  'TKA Bahasa Indonesia Tingkat Lanjut': ['Pemahaman Tekstual', 'Pemahaman Inferensial', 'Evaluasi dan Apresiasi'],
+  'TKA Bahasa Inggris Tingkat Lanjut': ['Pemahaman Tekstual', 'Pemahaman Inferensial', 'Evaluasi dan Apresiasi'],
+  'TKA Fisika Pilihan': ['Kinematika', 'Dinamika', 'Fluida', 'Gelombang', 'Kalor dan Termodinamika', 'Kelistrikan'],
+  'TKA Biologi Pilihan': ['Keanekaragaman Hayati', 'Sel dan Metabolisme', 'Transport dan Pertukaran Zat', 'Sistem Regulasi dan Koordinasi', 'Sistem Imun dan Reproduksi', 'Keterampilan Proses Biologi'],
+  'TKA PPKn': ['Pancasila', 'UUD NRI Tahun 1945', 'Bhinneka Tunggal Ika', 'Negara Kesatuan Republik Indonesia'],
+  'TKA Ekonomi Pilihan': ['Konsep Dasar Ilmu Ekonomi', 'Ekonomi Mikro dan Makro', 'Ekonomi Internasional', 'Akuntansi Keuangan Dasar'],
+  'TKA Geografi Pilihan': ['Wilayah Tempat Tinggal dan Lingkungan Sekitar', 'Proses yang Memengaruhi Lingkungan Fisik dan Sosial', 'Interaksi Antargejala Fisik Alam dan Manusia', 'Mitigasi dan Adaptasi Bencana Alam', 'Fenomena Geografi Sehari-hari (Peta, Penginderaan Jauh, SIG)'],
+  'TKA Sosiologi Pilihan': ['Sosiologi sebagai Ilmu', 'Hubungan dan Gejala Sosial', 'Penelitian Sosial', 'Kelompok Sosial, Kesetaraan, dan Konflik Sosial', 'Perubahan Sosial dan Globalisasi'],
+  'TKA Sejarah Pilihan': ['Pengantar Ilmu Sejarah', 'Periode Kerajaan Hindu-Buddha dan Islam', 'Perlawanan terhadap Bangsa Eropa', 'Pergerakan Nasional sampai Proklamasi Kemerdekaan', 'Revolusi Kemerdekaan sampai Demokrasi Terpimpin', 'Orde Baru sampai Reformasi'],
+  'TKA Antropologi Pilihan': ['Pengantar dan Ruang Lingkup Antropologi', 'Etnografi', 'Masyarakat Multikultural', 'Perubahan Sosial Budaya', 'Antropologi Sosial dan Antropologi Budaya', 'Kearifan Lokal dan Tradisi Lisan'],
+  'TKA PKWU Pilihan': ['Kegiatan Produksi, Pemasaran, dan Distribusi', 'Pengelolaan Usaha'],
 };
 
 export const PackageConfigBuilder: React.FC<PackageConfigBuilderProps> = ({ onGenerate, isLoading }) => {
   const [subtes, setSubtes] = useState('Penalaran Matematika');
   const [totalQuestions, setTotalQuestions] = useState(10);
   const [includeAi, setIncludeAi] = useState(true);
+  const [selectedModel, setSelectedModel] = useState<'opus-4.6' | 'sonnet-4.6' | ''>('');
   const [minSimilarity, setMinSimilarity] = useState(0.40);
 
   // Difficulty allocations
@@ -72,6 +89,7 @@ export const PackageConfigBuilder: React.FC<PackageConfigBuilderProps> = ({ onGe
         HOTS: diffHots,
       },
       includeAi,
+      model: includeAi && selectedModel ? selectedModel : undefined,
       minSimilarityThreshold: minSimilarity,
     });
   };
@@ -193,6 +211,22 @@ export const PackageConfigBuilder: React.FC<PackageConfigBuilderProps> = ({ onGe
             <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1B3FAB]"></div>
           </label>
         </div>
+
+        {/* Model AI Selection when includeAi is true */}
+        {includeAi && (
+          <div>
+            <label className="block text-xs font-bold text-[#64748B] mb-1.5">Model AI Soal</label>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value as any)}
+              className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
+            >
+              <option value="">Semua Model AI</option>
+              <option value="opus-4.6">Claude Opus 4.6</option>
+              <option value="sonnet-4.6">Claude Sonnet-4.6</option>
+            </select>
+          </div>
+        )}
 
         {/* Max similarity slider */}
         <div>
