@@ -53,25 +53,16 @@ const allowedOrigins = getAllowedOrigins();
 
 const isAllowedOrigin = (origin?: string): boolean => {
   if (!origin) return true; // Server-to-server or tools
-  const cleanOrigin = origin.trim().replace(/\/+$/, '');
-  if (allowedOrigins.includes(cleanOrigin)) return true;
-  try {
-    const parsed = new URL(cleanOrigin);
-    const host = parsed.hostname;
-    if (
-      host === 'stubia.id' ||
-      host.endsWith('.stubia.id') ||
-      host.endsWith('.vercel.app') ||
-      host.endsWith('.railway.app') ||
-      host.endsWith('.onrender.com') ||
-      host === 'localhost' ||
-      host === '127.0.0.1'
-    ) {
-      return true; // Support Vercel, Render, Railway, and custom stubia.id domains
-    }
-  } catch {
-    if (cleanOrigin.includes('stubia.id') || cleanOrigin.includes('vercel.app')) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  if (
+    origin.endsWith('.vercel.app') ||
+    origin.endsWith('.onrender.com') ||
+    origin.endsWith('.stubia.id') ||
+    origin === 'https://stubia.id'
+  ) {
+    return true; // Support Vercel, Render, and custom stubia.id domains
   }
+  if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) return true;
   return false;
 };
 
@@ -82,7 +73,7 @@ const io = new Server(server, {
       if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(null, false);
+      return callback(new Error(`Socket CORS blocked for origin: ${origin}`), false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
@@ -91,29 +82,25 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
-// General middlewares - CORS mounted first to ensure preflight & cross-origin requests always succeed
+// HTTP Security Headers via Helmet
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded files to be displayed by frontend
+  })
+);
+
+// General middlewares
 app.use(
   cors({
     origin: (origin, callback) => {
       if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(null, false);
+      return callback(new Error(`Blocked by CORS policy: Origin ${origin} not allowed`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Disposition', 'Content-Length'],
-  })
-);
-
-// Preflight handler
-app.options('*', cors());
-
-// HTTP Security Headers via Helmet
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded files to be displayed by frontend
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
@@ -179,12 +166,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin;
-  if (origin && isAllowedOrigin(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-
   const statusCode = err.statusCode || 500;
   const errorCode = err.errorCode || 'INTERNAL_ERROR';
   
@@ -244,6 +225,10 @@ chatNamespace.on('connection', (socket) => {
 });
 
 app.set('chatNamespace', chatNamespace);
+
+// Timeout settings (5 minutes for heavy AI generation batches)
+server.timeout = 300000;
+server.keepAliveTimeout = 65000;
 
 // Start server
 server.listen(Number(PORT), '0.0.0.0', () => {

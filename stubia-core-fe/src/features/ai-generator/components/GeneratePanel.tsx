@@ -410,6 +410,12 @@ export const GeneratePanel: React.FC = () => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [meta, setMeta] = useState<any>(null);
 
+  // Batch Progress Tracking (progressive generation in chunks of 5)
+  const BATCH_SIZE = 5;
+  const [batchCurrent, setBatchCurrent] = useState(0);
+  const [batchTotal, setBatchTotal] = useState(0);
+  const [batchQuestionsLoaded, setBatchQuestionsLoaded] = useState(0);
+
   // Package Modal & Selection
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [savePackageName, setSavePackageName] = useState('');
@@ -493,49 +499,6 @@ export const GeneratePanel: React.FC = () => {
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
     return `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
-  const getStageInfo = (secs: number) => {
-    if (secs < 3) {
-      return {
-        title: 'Menganalisis Parameter Soal',
-        desc: 'Menyiapkan subtes, topik cakupan, dan kalkulasi distribusi tingkat kesulitan...',
-        step: 1,
-      };
-    }
-    if (secs < 12) {
-      return {
-        title: 'Merumuskan Teks Wacana / Stimulus',
-        desc: 'Menyusun stimulus wacana berkualitas tinggi yang otentik dan kontekstual...',
-        step: 2,
-      };
-    }
-    if (secs < 25) {
-      return {
-        title: 'Menyusun Butir Soal & Pengecoh',
-        desc: 'Merumuskan pertanyaan analitis, opsi A–E yang masuk akal, dan format evaluasi...',
-        step: 3,
-      };
-    }
-    if (secs < 45) {
-      return {
-        title: 'Memformulasikan Kunci, Pembahasan & Prompt Visual',
-        desc: 'Menulis pembahasan terstruktur langkah demi langkah dan deskripsi prompt gambar...',
-        step: 4,
-      };
-    }
-    if (secs < 75) {
-      return {
-        title: 'Validasi JSON & Konsolidasi Batch',
-        desc: 'Memvalidasi struktur skema 14 kolom data dan merapikan paket soal...',
-        step: 5,
-      };
-    }
-    return {
-      title: 'Finalisasi Paket Soal',
-      desc: 'Proses hampir selesai. Sedang memvalidasi seluruh butir soal sebelum ditampilkan...',
-      step: 6,
-    };
   };
 
   // Helper calculation for Difficulty sum
@@ -995,40 +958,121 @@ export const GeneratePanel: React.FC = () => {
     setSelectedIndices([]);
     setMeta(null);
 
-    const configPayload = {
-      subtes,
-      topik: selectedTopics,
-      materi: materiList[0] || undefined,
-      materiList: materiList && materiList.length > 0 ? materiList : undefined,
-      difficulty: difficultyMode === 'single' ? singleDifficulty : 'MEDIUM',
-      difficultyDistribution: difficultyMode === 'distribution' ? {
-        EASY: diffEasy,
-        MEDIUM: diffMedium,
-        HOTS: diffHots,
-      } : undefined,
-      tipe: selectedTypes[0],
-      tipes: selectedTypes,
-      typesDistribution: typesAlloc,
-      jumlah,
-      reuseStimulus,
-      questionsPerStimulus,
-      includeImagePrompts,
-    };
+    // Calculate batches (e.g. 25 soal → 5 batches of 5)
+    const totalBatches = Math.ceil(jumlah / BATCH_SIZE);
+    setBatchTotal(totalBatches);
+    setBatchCurrent(0);
+    setBatchQuestionsLoaded(0);
 
-    try {
-      const result = await aiGeneratorApi.generateQuestions(selectedSkill.id, configPayload, selectedModel);
-      setGeneratedQuestions(result.questions);
-      setMeta(result.meta);
-      
-      // Auto-select ALL generated questions by default so Export and Save always include all questions
-      const allIndices = result.questions.map((_, idx) => idx);
-      setSelectedIndices(allIndices);
-      toast.success(`${result.questions.length} soal berhasil digenerate AI!`);
-    } catch (err: any) {
-      toast.error(err.message || 'Gagal generate soal via AI.');
-    } finally {
-      setIsGenerating(false);
+    const allQuestions: GeneratedQuestion[] = [];
+    let totalTokens = 0;
+    let totalCost = 0;
+    let totalBlocked = 0;
+    let totalWarning = 0;
+    let totalSafe = 0;
+    let hasError = false;
+
+    for (let batch = 0; batch < totalBatches; batch++) {
+      if (hasError) break;
+
+      const batchJumlah = Math.min(BATCH_SIZE, jumlah - batch * BATCH_SIZE);
+      setBatchCurrent(batch + 1);
+
+      // Slice materiList for this batch so each batch gets unique materi entries
+      const batchMateriList = materiList && materiList.length > 0
+        ? (() => {
+            const stimulusPerBatch = reuseStimulus
+              ? Math.ceil(batchJumlah / questionsPerStimulus)
+              : batchJumlah;
+            const startIdx = batch * (reuseStimulus ? Math.ceil(BATCH_SIZE / questionsPerStimulus) : BATCH_SIZE);
+            return materiList.slice(startIdx, startIdx + stimulusPerBatch);
+          })()
+        : undefined;
+
+      const configPayload = {
+        subtes,
+        topik: selectedTopics,
+        materi: batchMateriList && batchMateriList.length > 0 ? batchMateriList[0] : (materiList[0] || undefined),
+        materiList: batchMateriList && batchMateriList.length > 0 ? batchMateriList : undefined,
+        difficulty: difficultyMode === 'single' ? singleDifficulty : 'MEDIUM',
+        difficultyDistribution: difficultyMode === 'distribution' ? {
+          EASY: diffEasy,
+          MEDIUM: diffMedium,
+          HOTS: diffHots,
+        } : undefined,
+        tipe: selectedTypes[0],
+        tipes: selectedTypes,
+        typesDistribution: typesAlloc,
+        jumlah: batchJumlah,
+        reuseStimulus,
+        questionsPerStimulus,
+        includeImagePrompts,
+      };
+
+      try {
+        const result = await aiGeneratorApi.generateQuestions(selectedSkill.id, configPayload, selectedModel);
+
+        // Append this batch's questions to running total
+        allQuestions.push(...result.questions);
+        totalTokens += result.meta.tokensUsed || 0;
+        totalCost += result.meta.costEstimateUsd || 0;
+        totalBlocked += result.meta.summary.blocked || 0;
+        totalWarning += result.meta.summary.warning || 0;
+        totalSafe += result.meta.summary.safe || 0;
+
+        // Progressively update state so user sees results appearing live
+        setGeneratedQuestions([...allQuestions]);
+        setBatchQuestionsLoaded(allQuestions.length);
+
+        // Auto-select all questions loaded so far
+        setSelectedIndices(allQuestions.map((_, idx) => idx));
+
+        // Update aggregated meta progressively
+        setMeta({
+          durationMs: Date.now() - performance.now(), // will be overwritten at end
+          tokensUsed: totalTokens,
+          costEstimateUsd: totalCost,
+          summary: {
+            blocked: totalBlocked,
+            warning: totalWarning,
+            safe: totalSafe,
+            total: allQuestions.length,
+          },
+        });
+
+        toast.success(`Batch ${batch + 1}/${totalBatches} selesai — ${result.questions.length} soal baru (total: ${allQuestions.length})`, {
+          id: `batch-${batch}`,
+          duration: 2000,
+        });
+      } catch (err: any) {
+        hasError = true;
+        if (allQuestions.length > 0) {
+          // Partial success: some batches completed
+          toast.error(`Batch ${batch + 1}/${totalBatches} gagal: ${err.message || 'Error'}. ${allQuestions.length} soal dari batch sebelumnya tetap tersimpan.`);
+        } else {
+          toast.error(err.message || 'Gagal generate soal via AI.');
+        }
+      }
     }
+
+    // Final summary
+    if (allQuestions.length > 0) {
+      setMeta((prev: any) => ({
+        ...prev,
+        durationMs: prev?.durationMs || 0,
+        summary: {
+          blocked: totalBlocked,
+          warning: totalWarning,
+          safe: totalSafe,
+          total: allQuestions.length,
+        },
+      }));
+      if (!hasError) {
+        toast.success(`✅ Selesai! ${allQuestions.length} soal berhasil digenerate AI dalam ${totalBatches} batch!`, { duration: 4000 });
+      }
+    }
+
+    setIsGenerating(false);
   };
 
   const handleFieldChange = (index: number, field: string, value: any) => {
@@ -1920,7 +1964,7 @@ export const GeneratePanel: React.FC = () => {
             {isGenerating ? (
               <>
                 <Clock className="h-5 w-5 shrink-0 animate-spin text-white" />
-                <span>Membuat Soal... ({formatTimer(elapsedSeconds)})</span>
+                <span>Batch {batchCurrent}/{batchTotal} — {batchQuestionsLoaded}/{jumlah} soal ({formatTimer(elapsedSeconds)})</span>
               </>
             ) : (
               <>
@@ -1960,89 +2004,113 @@ export const GeneratePanel: React.FC = () => {
           )}
 
           {isGenerating ? (
-            // Loading State with Live Timer & Dynamic Step Tracking
-            <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 shadow-md flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-300">
-              {/* Header Badge with Live Timer */}
-              <div className="flex items-center gap-2.5 bg-purple-100/80 border border-purple-300 text-[#5B21B6] px-4 py-2 rounded-full shadow-sm">
-                <Clock className="h-4 w-4 text-[#7C3AED] animate-spin" />
-                <span className="text-xs font-bold uppercase tracking-wider">Waktu Berjalan:</span>
-                <span className="text-sm font-black font-mono bg-white text-[#7C3AED] px-2.5 py-0.5 rounded-md border border-purple-200 shadow-inner">
-                  {formatTimer(elapsedSeconds)}
-                </span>
-              </div>
-
-              {/* Central Glowing Icon */}
-              <div className="relative">
-                <div className="h-20 w-20 rounded-3xl bg-gradient-to-tr from-[#7C3AED] to-purple-400 flex items-center justify-center text-white shadow-xl shadow-purple-500/25 animate-pulse">
-                  <Sparkles className="h-10 w-10 animate-spin" style={{ animationDuration: '6s' }} />
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow border border-purple-200">
-                  <Cpu className="h-4 w-4 text-[#7C3AED] animate-bounce" />
-                </div>
-              </div>
-
-              {/* Dynamic Step Text */}
-              <div className="text-center space-y-2 max-w-md">
-                <h4 className="text-base font-extrabold text-[#0F172A] flex items-center justify-center gap-2">
-                  <span>{getStageInfo(elapsedSeconds).title}</span>
-                </h4>
-                <p className="text-xs text-[#64748B] font-semibold leading-relaxed">
-                  {getStageInfo(elapsedSeconds).desc}
-                </p>
-              </div>
-
-              {/* Live Steps Indicator Bar */}
-              <div className="w-full max-w-md bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-3.5 space-y-2.5">
-                <div className="flex justify-between items-center text-[11px] font-bold">
-                  <span className="text-[#64748B]">Target: {jumlah} Soal ({selectedTypes.join(', ')})</span>
-                  <span className="text-[#7C3AED]">
-                    {jumlah > 6 && reuseStimulus 
-                      ? `${Math.ceil(jumlah / questionsPerStimulus)} Batch Paralel Aktif` 
-                      : '1 Batch Aktif'}
+            // Loading State with Batch Progress Tracking
+            <div className="space-y-6">
+              <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 shadow-md flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-300">
+                {/* Header Badge with Live Timer */}
+                <div className="flex items-center gap-2.5 bg-purple-100/80 border border-purple-300 text-[#5B21B6] px-4 py-2 rounded-full shadow-sm">
+                  <Clock className="h-4 w-4 text-[#7C3AED] animate-spin" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Waktu Berjalan:</span>
+                  <span className="text-sm font-black font-mono bg-white text-[#7C3AED] px-2.5 py-0.5 rounded-md border border-purple-200 shadow-inner">
+                    {formatTimer(elapsedSeconds)}
                   </span>
                 </div>
 
-                {/* Progress Bar Shimmer */}
-                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden relative">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#7C3AED] via-purple-400 to-[#7C3AED] rounded-full transition-all duration-1000 relative overflow-hidden"
-                    style={{ width: `${Math.min(95, Math.max(10, elapsedSeconds * 6))}%` }}
-                  >
-                    <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                {/* Central Glowing Icon */}
+                <div className="relative">
+                  <div className="h-20 w-20 rounded-3xl bg-gradient-to-tr from-[#7C3AED] to-purple-400 flex items-center justify-center text-white shadow-xl shadow-purple-500/25 animate-pulse">
+                    <Sparkles className="h-10 w-10 animate-spin" style={{ animationDuration: '6s' }} />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow border border-purple-200">
+                    <Cpu className="h-4 w-4 text-[#7C3AED] animate-bounce" />
                   </div>
                 </div>
 
-                {/* Step List Pills */}
-                <div className="grid grid-cols-5 gap-1.5 pt-1">
-                  {[
-                    '1. Inisiasi',
-                    '2. Stimulus',
-                    '3. Soal & Opsi',
-                    '4. Bahasan',
-                    '5. Validasi',
-                  ].map((label, idx) => {
-                    const stepNum = idx + 1;
-                    const isDone = getStageInfo(elapsedSeconds).step > stepNum;
-                    const isCurrent = getStageInfo(elapsedSeconds).step === stepNum;
+                {/* Dynamic Batch Text */}
+                <div className="text-center space-y-2 max-w-md">
+                  <h4 className="text-base font-extrabold text-[#0F172A] flex items-center justify-center gap-2">
+                    <span>
+                      {batchCurrent > 0
+                        ? `Memproses Batch ${batchCurrent} dari ${batchTotal}`
+                        : 'Mempersiapkan Generate...'}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-[#64748B] font-semibold leading-relaxed">
+                    {batchQuestionsLoaded > 0
+                      ? `${batchQuestionsLoaded} soal selesai digenerate. Mengerjakan batch berikutnya (per ${BATCH_SIZE} soal) untuk menghindari timeout...`
+                      : `Mengirim batch pertama ke AI (${Math.min(BATCH_SIZE, jumlah)} soal)...`}
+                  </p>
+                </div>
 
-                    return (
-                      <div
-                        key={idx}
-                        className={`text-[9px] font-bold text-center py-1 px-0.5 rounded transition-all truncate ${
-                          isDone
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : isCurrent
-                            ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300 animate-pulse'
-                            : 'bg-white text-slate-400 border border-slate-200'
-                        }`}
-                        title={label}
-                      >
-                        {label}
-                      </div>
-                    );
-                  })}
+                {/* Real Progress Bar */}
+                <div className="w-full max-w-md bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-[#64748B]">Target: {jumlah} Soal ({selectedTypes.join(', ')})</span>
+                    <span className="text-[#7C3AED]">
+                      Batch {batchCurrent}/{batchTotal} — {batchQuestionsLoaded} soal selesai
+                    </span>
+                  </div>
+
+                  <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden relative">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#7C3AED] via-purple-400 to-[#7C3AED] rounded-full transition-all duration-700 relative overflow-hidden"
+                      style={{ width: `${Math.max(3, (batchQuestionsLoaded / jumlah) * 100)}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                    </div>
+                  </div>
+
+                  {/* Batch pills */}
+                  <div className={`grid gap-1.5 pt-1`} style={{ gridTemplateColumns: `repeat(${Math.min(batchTotal, 10)}, 1fr)` }}>
+                    {Array.from({ length: batchTotal }, (_, idx) => {
+                      const batchNum = idx + 1;
+                      const isDone = batchNum < batchCurrent;
+                      const isCurrent = batchNum === batchCurrent;
+                      const batchSoalCount = Math.min(BATCH_SIZE, jumlah - idx * BATCH_SIZE);
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`text-[9px] font-bold text-center py-1.5 px-0.5 rounded transition-all truncate ${
+                            isDone
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : isCurrent
+                              ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300 animate-pulse'
+                              : 'bg-white text-slate-400 border border-slate-200'
+                          }`}
+                          title={`Batch ${batchNum}: ${batchSoalCount} soal`}
+                        >
+                          {isDone ? '✓' : isCurrent ? '⏳' : ''} B{batchNum} ({batchSoalCount})
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+
+              {/* Show already-generated questions below the loading panel */}
+              {generatedQuestions.length > 0 && (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                    <span className="text-xs font-bold text-emerald-800">
+                      {generatedQuestions.length} soal sudah digenerate — batch selanjutnya sedang diproses...
+                    </span>
+                  </div>
+                  <div className="space-y-6 max-h-[calc(100vh-400px)] overflow-y-auto pr-1">
+                    {generatedQuestions.map((q, idx) => (
+                      <AIResultCard
+                        key={idx}
+                        question={q}
+                        index={idx}
+                        isSelected={selectedIndices.includes(idx)}
+                        onSelectToggle={handleSelectToggle}
+                        onFieldChange={handleFieldChange}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : generatedQuestions.length === 0 ? (
             // Empty State
