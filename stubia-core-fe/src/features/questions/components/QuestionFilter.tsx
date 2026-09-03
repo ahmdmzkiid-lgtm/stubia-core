@@ -67,6 +67,7 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
             <option value="TKA Sejarah Pilihan">TKA Sejarah Pilihan</option>
             <option value="TKA Antropologi Pilihan">TKA Antropologi Pilihan</option>
             <option value="TKA PKWU Pilihan">TKA PKWU Pilihan</option>
+            <option value="TKA Bahasa Prancis Pilihan">TKA Bahasa Prancis Pilihan</option>
           </select>
         </div>
 

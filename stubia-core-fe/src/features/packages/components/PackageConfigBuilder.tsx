@@ -34,6 +34,7 @@ const SUBTEST_TOPICS: Record<string, string[]> = {
   'TKA Sejarah Pilihan': ['Pengantar Ilmu Sejarah', 'Periode Kerajaan Hindu-Buddha dan Islam', 'Perlawanan terhadap Bangsa Eropa', 'Pergerakan Nasional sampai Proklamasi Kemerdekaan', 'Revolusi Kemerdekaan sampai Demokrasi Terpimpin', 'Orde Baru sampai Reformasi'],
   'TKA Antropologi Pilihan': ['Pengantar dan Ruang Lingkup Antropologi', 'Etnografi', 'Masyarakat Multikultural', 'Perubahan Sosial Budaya', 'Antropologi Sosial dan Antropologi Budaya', 'Kearifan Lokal dan Tradisi Lisan'],
   'TKA PKWU Pilihan': ['Kegiatan Produksi, Pemasaran, dan Distribusi', 'Pengelolaan Usaha'],
+  'TKA Bahasa Prancis Pilihan': ['Pemahaman Literal', 'Reorganisasi', 'Pemahaman Inferensial'],
 };
 
 export const PackageConfigBuilder: React.FC<PackageConfigBuilderProps> = ({ onGenerate, isLoading }) => {

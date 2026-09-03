@@ -237,6 +237,19 @@ const DEFAULT_PKWU_MATERI_OPTIONS = [
   'Kegiatan Produksi, Pemasaran, dan Distribusi – Pengembangan Prototipe & Proses Produksi',
 ];
 
+const DEFAULT_PRANCIS_MATERI_OPTIONS = [
+  'Pemahaman Literal – Pemberitahuan & Pengumuman (messages courts et annonces)',
+  'Pemahaman Literal – Perkenalan Diri & Aktivitas Sehari-hari (se présenter, la vie quotidienne)',
+  'Pemahaman Inferensial – Deskripsi Orang dan Tempat (description de personnes et de lieux)',
+  'Pemahaman Literal – Instruksi Tanda dan Rambu (panneaux, signes)',
+  'Pemahaman Inferensial – Menyatakan Opini & Kesimpulan (donner des opinions)',
+  'Reorganisasi – Aktivitas Sehari-hari & Pengumuman (la vie quotidienne)',
+  'Pemahaman Literal – Kosakata Angka, Jam, dan Tanggal (les nombres, l\'heure, la date)',
+  'Pemahaman Literal – Melengkapi Teks Rumpang (texte à trous)',
+  'Pemahaman Inferensial – Keberadaan Orang dan Benda (se situer dans l\'espace)',
+  'Pemahaman Literal – Ungkapan Salam, Berpamitan, dan Harapan (salutations et souhaits)',
+];
+
 export const GeneratePanel: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -287,6 +300,7 @@ export const GeneratePanel: React.FC = () => {
   const isSejarahSubtest = subtesLower.includes('sejarah');
   const isAntropologiSubtest = subtesLower.includes('antropologi');
   const isPkwuSubtest = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+  const isPrancisSubtest = subtesLower.includes('prancis') || subtesLower.includes('francais');
   const isBindoLanjutSubtest = subtesLower.includes('indo') && (subtesLower.includes('lanjut') || subtesLower.includes('tingkat lanjut'));
   const isMtkLanjutSubtest = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
   const isMtkSubtest = subtesLower.includes('matematika') && !isMtkLanjutSubtest;
@@ -304,6 +318,7 @@ export const GeneratePanel: React.FC = () => {
     if (isSejarahSubtest) return DEFAULT_SEJARAH_MATERI_OPTIONS;
     if (isAntropologiSubtest) return DEFAULT_ANTROPOLOGI_MATERI_OPTIONS;
     if (isPkwuSubtest) return DEFAULT_PKWU_MATERI_OPTIONS;
+    if (isPrancisSubtest) return DEFAULT_PRANCIS_MATERI_OPTIONS;
     if (isMtkLanjutSubtest) return DEFAULT_MTK_LANJUT_MATERI_OPTIONS;
     if (isMtkSubtest) return DEFAULT_MTK_MATERI_OPTIONS;
     if (isBingLanjutSubtest) return DEFAULT_BING_LANJUT_MATERI_OPTIONS;
@@ -332,7 +347,7 @@ export const GeneratePanel: React.FC = () => {
         return updated.slice(0, stimulusCount);
       }
     });
-  }, [stimulusCount, isKimiaSubtest, isFisikaSubtest, isBiologiSubtest, isPpknSubtest, isEkonomiSubtest, isGeografiSubtest, isSosiologiSubtest, isSejarahSubtest, isAntropologiSubtest, isPkwuSubtest, isMtkSubtest, isMtkLanjutSubtest, isBingSubtest, isBingLanjutSubtest, isBindoLanjutSubtest]);
+  }, [stimulusCount, isKimiaSubtest, isFisikaSubtest, isBiologiSubtest, isPpknSubtest, isEkonomiSubtest, isGeografiSubtest, isSosiologiSubtest, isSejarahSubtest, isAntropologiSubtest, isPkwuSubtest, isPrancisSubtest, isMtkSubtest, isMtkLanjutSubtest, isBingSubtest, isBingLanjutSubtest, isBindoLanjutSubtest]);
 
   const handleMateriChange = (sIdx: number, val: string) => {
     setMateriList(prev => {
@@ -520,6 +535,7 @@ export const GeneratePanel: React.FC = () => {
     const isSejarah = skillSubtes.includes('sejarah');
     const isAntropologi = skillSubtes.includes('antropologi');
     const isPkwu = skillSubtes.includes('pkwu') || skillSubtes.includes('kewirausahaan');
+    const isPrancis = skillSubtes.includes('prancis') || skillSubtes.includes('francais');
     const isBindoLanjut = skillSubtes.includes('indo') && (skillSubtes.includes('lanjut') || skillSubtes.includes('tingkat lanjut'));
     const isMtkLanjut = skillSubtes.includes('matematika') && (skillSubtes.includes('tingkat lanjut') || skillSubtes.includes('lanjut'));
     const isMtk = skillSubtes.includes('matematika') && !isMtkLanjut;
@@ -576,6 +592,11 @@ export const GeneratePanel: React.FC = () => {
       setIncludeImagePrompts(true);
       const count = Math.ceil(25 / questionsPerStimulus);
       setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PKWU_MATERI_OPTIONS[i % DEFAULT_PKWU_MATERI_OPTIONS.length]));
+    } else if (isPrancis) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PRANCIS_MATERI_OPTIONS[i % DEFAULT_PRANCIS_MATERI_OPTIONS.length]));
     } else if (isMtkLanjut) {
       setJumlah(25);
       setIncludeImagePrompts(true);
@@ -676,6 +697,7 @@ export const GeneratePanel: React.FC = () => {
     const isSejarah = subtesLower.includes('sejarah');
     const isAntropologi = subtesLower.includes('antropologi');
     const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+    const isPrancis = subtesLower.includes('prancis') || subtesLower.includes('francais');
     const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
@@ -802,6 +824,18 @@ export const GeneratePanel: React.FC = () => {
       const count = Math.ceil(25 / questionsPerStimulus);
       setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PKWU_MATERI_OPTIONS[i % DEFAULT_PKWU_MATERI_OPTIONS.length]));
       toast.success('Preset Paket TKA PKWU Aktif: 25 Soal (Mudah 7, Sedang 11, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isPrancis) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(36);
+      setDiffMedium(40);
+      setDiffHots(24);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PRANCIS_MATERI_OPTIONS[i % DEFAULT_PRANCIS_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Bahasa Prancis Aktif: 25 Soal (Mudah 9, Sedang 10, Sulit 6) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
     } else if (isMtkLanjut) {
       setJumlah(25);
       setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
@@ -1032,6 +1066,7 @@ export const GeneratePanel: React.FC = () => {
     const isSejarah = subtesLower.includes('sejarah');
     const isAntropologi = subtesLower.includes('antropologi');
     const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
+    const isPrancis = subtesLower.includes('prancis') || subtesLower.includes('francais');
     const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
@@ -1057,17 +1092,19 @@ export const GeneratePanel: React.FC = () => {
                       ? 'TKA_ANTROPOLOGI_TRYOUT'
                       : (isPkwu
                         ? 'TKA_PKWU_TRYOUT'
-                        : (isMtkLanjut 
-                          ? 'TKA_MATEMATIKA_LANJUT_TRYOUT' 
-                          : (isMtk 
-                            ? 'TKA_MATEMATIKA_TRYOUT' 
-                            : (isBingLanjut 
-                              ? 'TKA_BING_LANJUT_TRYOUT' 
-                              : (isBing 
-                                ? 'TKA_BING_TRYOUT' 
-                                : (isBindoLanjut 
-                                  ? 'TKA_BINDO_LANJUT_TRYOUT' 
-                                  : 'TKA_BINDO_TRYOUT'))))))))))))));
+                        : (isPrancis
+                          ? 'TKA_PRANCIS_TRYOUT'
+                          : (isMtkLanjut 
+                            ? 'TKA_MATEMATIKA_LANJUT_TRYOUT' 
+                            : (isMtk 
+                              ? 'TKA_MATEMATIKA_TRYOUT' 
+                              : (isBingLanjut 
+                                ? 'TKA_BING_LANJUT_TRYOUT' 
+                                : (isBing 
+                                  ? 'TKA_BING_TRYOUT' 
+                                  : (isBindoLanjut 
+                                    ? 'TKA_BINDO_LANJUT_TRYOUT' 
+                                    : 'TKA_BINDO_TRYOUT')))))))))))))));
     const label = isKimia 
       ? 'TKA Kimia' 
       : (isFisika 
@@ -1088,17 +1125,19 @@ export const GeneratePanel: React.FC = () => {
                       ? 'TKA Antropologi'
                       : (isPkwu
                         ? 'TKA PKWU'
-                        : (isMtkLanjut 
-                          ? 'TKA MTK Lanjut' 
-                          : (isMtk 
-                            ? 'TKA Matematika' 
-                            : (isBingLanjut 
-                              ? 'TKA B. Inggris Lanjut' 
-                              : (isBing 
-                                ? 'TKA B. Inggris' 
-                                : (isBindoLanjut 
-                                  ? 'TKA Bindo Lanjut' 
-                                  : 'TKA'))))))))))))));
+                        : (isPrancis
+                          ? 'TKA B. Prancis'
+                          : (isMtkLanjut 
+                            ? 'TKA MTK Lanjut' 
+                            : (isMtk 
+                              ? 'TKA Matematika' 
+                              : (isBingLanjut 
+                                ? 'TKA B. Inggris Lanjut' 
+                                : (isBing 
+                                  ? 'TKA B. Inggris' 
+                                  : (isBindoLanjut 
+                                    ? 'TKA Bindo Lanjut' 
+                                    : 'TKA')))))))))))))));
     const toastId = toast.loading(`Mengkompilasi ${selectedQuestions.length} soal Excel ${label}...`);
 
     try {

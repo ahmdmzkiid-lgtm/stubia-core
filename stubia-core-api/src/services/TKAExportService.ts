@@ -183,6 +183,8 @@ export class TKAExportService {
       sheetPrefix = 'TKA Antropologi';
     } else if (firstSubtesLower.includes('pkwu') || firstSubtesLower.includes('kewirausahaan')) {
       sheetPrefix = 'TKA PKWU';
+    } else if (firstSubtesLower.includes('prancis') || firstSubtesLower.includes('francais')) {
+      sheetPrefix = 'TKA B. Prancis';
     } else if (firstSubtesLower.includes('indo') && firstSubtesLower.includes('lanjut')) {
       sheetPrefix = 'TKA Bindo Lanjut';
     } else if (firstSubtesLower.includes('indo')) {
