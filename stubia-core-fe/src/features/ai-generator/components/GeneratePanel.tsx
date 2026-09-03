@@ -960,6 +960,7 @@ export const GeneratePanel: React.FC = () => {
 
     // Calculate batches (e.g. 25 soal → 5 batches of 5)
     const totalBatches = Math.ceil(jumlah / BATCH_SIZE);
+    const generationStartTime = Date.now();
     setBatchTotal(totalBatches);
     setBatchCurrent(0);
     setBatchQuestionsLoaded(0);
@@ -1029,7 +1030,7 @@ export const GeneratePanel: React.FC = () => {
 
         // Update aggregated meta progressively
         setMeta({
-          durationMs: Date.now() - performance.now(), // will be overwritten at end
+          durationMs: Date.now() - generationStartTime,
           tokensUsed: totalTokens,
           costEstimateUsd: totalCost,
           summary: {
@@ -1059,7 +1060,7 @@ export const GeneratePanel: React.FC = () => {
     if (allQuestions.length > 0) {
       setMeta((prev: any) => ({
         ...prev,
-        durationMs: prev?.durationMs || 0,
+        durationMs: Date.now() - generationStartTime,
         summary: {
           blocked: totalBlocked,
           warning: totalWarning,

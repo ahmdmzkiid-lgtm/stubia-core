@@ -230,6 +230,10 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
 
     // Insert generation log
     if (skillId) {
+      // Safely clamp integers to PostgreSQL INT4 range (max 2,147,483,647) to prevent conversion errors
+      const safeDurationMs = Math.min(Math.max(0, Math.round(Number(durationMs) || 0)), 2147483647);
+      const safeTokensUsed = Math.min(Math.max(0, Math.round(Number(tokensUsed) || 0)), 2147483647);
+
       await prisma.aIGenerationLog.create({
         data: {
           userId: creatorId,
@@ -239,9 +243,9 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
           questionsGenerated: questions.length,
           questionsSaved: savedCount,
           questionsBlocked: blockedCount,
-          tokensUsed: tokensUsed || 0,
-          costEstimateUsd: costEstimateUsd || 0,
-          durationMs: durationMs || 0,
+          tokensUsed: safeTokensUsed,
+          costEstimateUsd: typeof costEstimateUsd === 'number' ? costEstimateUsd : 0,
+          durationMs: safeDurationMs,
         },
       });
     }
