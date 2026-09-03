@@ -18,6 +18,7 @@ import chatRoutes from './routes/chat.routes';
 import usersRoutes from './routes/users.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import notificationsRoutes from './routes/notifications.routes';
+import helmet from 'helmet';
 import path from 'path';
 
 // Load environment variables
@@ -26,10 +27,48 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for Railway / Cloudflare / reverse proxies
+app.set('trust proxy', 1);
+
+// Allowed Origins Configuration
+const getAllowedOrigins = (): string[] => {
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((o) => o.trim()).filter(Boolean)
+    : [];
+
+  const devOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+  ];
+
+  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+    return Array.from(new Set([...envOrigins, ...devOrigins]));
+  }
+
+  return envOrigins.length > 0 ? envOrigins : devOrigins;
+};
+
+const allowedOrigins = getAllowedOrigins();
+
+const isAllowedOrigin = (origin?: string): boolean => {
+  if (!origin) return true; // Server-to-server or tools
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) return true; // Support Vercel and Render domains
+  if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) return true;
+  return false;
+};
+
 // Socket.io configuration
 const io = new Server(server, {
   cors: {
-    origin: '*', // In production, replace with specific domains
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Socket CORS blocked for origin: ${origin}`), false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   },
@@ -37,11 +76,28 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
+// HTTP Security Headers via Helmet
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded files to be displayed by frontend
+  })
+);
+
 // General middlewares
-app.use(cors({
-  origin: true, // Echo origin to allow credentials
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Blocked by CORS policy: Origin ${origin} not allowed`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  })
+);
+
 // General middlewares with high payload limit for base64 chat media/attachments
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -52,31 +108,31 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: isDev ? 10000 : 100, // Limit each IP to 100 requests per windowMs (or 10000 in dev)
+  max: isDev ? 10000 : 600, // 600 requests per 15 minutes in production
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    error: 'Too many requests, please try again later.',
+    error: 'Terlalu banyak permintaan ke server, silakan coba beberapa saat lagi.',
     code: 'API_RATE_LIMIT',
   },
 });
 
 const authLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: isDev ? 1000 : 10, // Limit each IP to 10 auth requests per minute (or 1000 in dev)
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: isDev ? 1000 : 20, // Limit to 20 login attempts per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    error: 'Too many auth requests, please slow down.',
+    error: 'Terlalu banyak percobaan login, silakan tunggu 15 menit.',
     code: 'AUTH_RATE_LIMIT',
   },
 });
 
-// Apply rate limits (Disabled to prevent "Too many requests" limits during active usage)
-// app.use('/api/', apiLimiter);
-// app.use('/api/auth/', authLimiter);
+// Apply rate limits
+app.use('/api/', apiLimiter);
+app.use('/api/auth/login', authLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -107,10 +163,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const statusCode = err.statusCode || 500;
   const errorCode = err.errorCode || 'INTERNAL_ERROR';
-  const message = err.message || 'Internal server error';
+  
+  const isProd = process.env.NODE_ENV === 'production';
+  let message = err.message || 'Internal server error';
 
-  if (process.env.NODE_ENV !== 'production' && statusCode === 500) {
-    console.error('Unhandled Error:', err);
+  // In production, do not leak raw stack traces or database schema errors for 500s
+  if (isProd && statusCode === 500 && !(err instanceof AppError)) {
+    message = 'Terjadi kesalahan pada server. Silakan hubungi administrator.';
+  }
+
+  if (statusCode === 500) {
+    console.error(`[Unhandled Error] [${req.method}] ${req.originalUrl || req.url}:`, err);
   }
 
   res.status(statusCode).json({
@@ -159,8 +222,8 @@ chatNamespace.on('connection', (socket) => {
 app.set('chatNamespace', chatNamespace);
 
 // Start server
-server.listen(PORT, () => {
-  console.log(`[Server] Running on http://localhost:${PORT}`);
+server.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`[Server] Running on http://0.0.0.0:${PORT}`);
 });
 
 export { io, kanbanNamespace, notificationsNamespace, chatNamespace };

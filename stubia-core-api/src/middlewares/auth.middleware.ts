@@ -19,8 +19,11 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
   const token = authHeader.split(' ')[1];
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'stubia-core-secret-jwt-key-2026';
-    const decoded = jwt.verify(token, jwtSecret) as {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret && process.env.NODE_ENV === 'production') {
+      return next(new AppError('Server misconfiguration: JWT_SECRET is missing', 500, 'CONFIG_ERROR'));
+    }
+    const decoded = jwt.verify(token, jwtSecret || 'dev-only-jwt-secret-key-32charsminimum') as {
       userId: string;
       role: UserRole;
       email: string;

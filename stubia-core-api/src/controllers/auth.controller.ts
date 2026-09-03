@@ -8,9 +8,35 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 const ACCESS_TOKEN_EXPIRY = '7d';
 const REFRESH_TOKEN_EXPIRY = '30d';
 
+const getJwtSecrets = () => {
+  const jwtSecret = process.env.JWT_SECRET;
+  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+
+  if (!jwtSecret || !jwtRefreshSecret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError('Server misconfiguration: JWT secrets are missing in production', 500, 'CONFIG_ERROR');
+    }
+    return {
+      jwtSecret: jwtSecret || 'dev-only-jwt-secret-key-32charsminimum',
+      jwtRefreshSecret: jwtRefreshSecret || 'dev-only-jwt-refresh-secret-key-32chars',
+    };
+  }
+
+  return { jwtSecret, jwtRefreshSecret };
+};
+
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+};
+
 const generateTokens = (user: { id: string; role: string; email: string }) => {
-  const jwtSecret = process.env.JWT_SECRET || 'stubia-core-secret-jwt-key-2026';
-  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'stubia-core-secret-jwt-refresh-key-2026';
+  const { jwtSecret, jwtRefreshSecret } = getJwtSecrets();
 
   const accessToken = jwt.sign(
     { userId: user.id, role: user.role, email: user.email },
@@ -51,12 +77,7 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     const { accessToken, refreshToken } = generateTokens(user);
 
     // Set refresh token in HttpOnly cookie
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', refreshToken, getCookieOptions());
 
     res.json({
       success: true,
@@ -78,11 +99,8 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
 
 export const logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
+    const { maxAge, ...clearOptions } = getCookieOptions();
+    res.clearCookie('refreshToken', clearOptions);
 
     res.json({
       success: true,
@@ -101,7 +119,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response, next: Ne
       throw new AppError('Unauthorized: Refresh token not provided', 401, 'UNAUTHORIZED');
     }
 
-    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'stubia-core-secret-jwt-refresh-key-2026';
+    const { jwtRefreshSecret } = getJwtSecrets();
     let decoded: any;
 
     try {
@@ -120,12 +138,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response, next: Ne
 
     const tokens = generateTokens(user);
 
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('refreshToken', tokens.refreshToken, getCookieOptions());
 
     res.json({
       success: true,

@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: stubia-core-api
+    runtime: node
+    rootDir: stubia-core-api
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: AI_PROVIDER
+        value: 9router
+      - key: AI_BASE_URL
+        value: https://ninerouter-jek.onrender.com/v1
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_DEFAULT_MODEL
+        value: stubia-v.1
+      - key: ALLOW_USER_SELECT_MODEL
+        value: "true"
+      - key: AI_DAILY_LIMIT_PER_USER
+        value: "20"
+      - key: AI_MAX_TOKENS
+        value: "4096"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: docs
