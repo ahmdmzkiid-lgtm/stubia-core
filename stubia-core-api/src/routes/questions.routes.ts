@@ -7,7 +7,9 @@ import {
   deleteQuestion,
   approveQuestion,
   checkSimilarityEndpoint,
-  exportQuestions
+  exportQuestions,
+  getPackagesList,
+  assignQuestionsPackage
 } from '../controllers/questions.controller';
 import { authenticate, requireRole } from '../middlewares/auth.middleware';
 
@@ -16,7 +18,9 @@ const router = Router();
 // Secure all routes
 router.use(authenticate);
 
-// Export endpoint must be mapped before id-based parameter routes
+// Static endpoints must be mapped before id-based parameter routes
+router.get('/packages', requireRole(['super_admin', 'academic_manager', 'content_creator']), getPackagesList);
+router.post('/assign-package', requireRole(['super_admin', 'academic_manager', 'content_creator']), assignQuestionsPackage);
 router.get('/export', requireRole(['super_admin', 'academic_manager', 'content_creator']), exportQuestions);
 router.post('/check-similarity', requireRole(['super_admin', 'academic_manager', 'content_creator']), checkSimilarityEndpoint);
 

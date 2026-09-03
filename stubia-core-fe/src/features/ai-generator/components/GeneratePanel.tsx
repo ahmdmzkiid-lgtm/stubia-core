@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { AISkill, GeneratedQuestion } from '../types/aiGenerator.types';
@@ -8,7 +8,9 @@ import { AIResultCard } from './AIResultCard';
 import { Input } from '../../../components/shared/Input';
 import { Button } from '../../../components/shared/Button';
 import { Badge } from '../../../components/shared/Badge';
-import { Sparkles, Library, Save, HelpCircle, FileSpreadsheet, Clock, Cpu, Image as ImageIcon } from 'lucide-react';
+import { Modal } from '../../../components/shared/Modal';
+import { questionsApi } from '../../questions/api/questionsApi';
+import { Sparkles, Library, Save, HelpCircle, FileSpreadsheet, Clock, Cpu, Image as ImageIcon, Search, ChevronDown, Check, X, Package } from 'lucide-react';
 
 const DEFAULT_BINDO_MATERI_OPTIONS = [
   'Teks Puisi',
@@ -257,6 +259,42 @@ export const GeneratePanel: React.FC = () => {
   const [skills, setSkills] = useState<AISkill[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<AISkill | null>(null);
   
+  // Searchable Skill Selector States
+  const [isSkillDropdownOpen, setIsSkillDropdownOpen] = useState(false);
+  const [skillSearchQuery, setSkillSearchQuery] = useState('');
+  const skillDropdownRef = useRef<HTMLDivElement>(null);
+  const skillSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (skillDropdownRef.current && !skillDropdownRef.current.contains(event.target as Node)) {
+        setIsSkillDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSkillDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isSkillDropdownOpen && skillSearchInputRef.current) {
+      skillSearchInputRef.current.focus();
+    }
+  }, [isSkillDropdownOpen]);
+
+  const filteredSkills = skills.filter(s => {
+    const q = skillSearchQuery.toLowerCase();
+    return s.namaSkill.toLowerCase().includes(q) || s.subtes.toLowerCase().includes(q);
+  });
+  
   // Form States
   const [subtes, setSubtes] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -372,7 +410,17 @@ export const GeneratePanel: React.FC = () => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [meta, setMeta] = useState<any>(null);
 
+  // Package Modal & Selection
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [savePackageName, setSavePackageName] = useState('');
+  const [existingPackages, setExistingPackages] = useState<Array<{ name: string; count: number }>>([]);
+
   const CACHE_KEY = 'stubia_ai_generated_questions_cache';
+
+  // Fetch existing packages for quick suggestion
+  useEffect(() => {
+    questionsApi.getPackages().then(setExistingPackages).catch(() => {});
+  }, []);
 
   // Restore cached questions from localStorage on component mount
   useEffect(() => {
@@ -1002,17 +1050,33 @@ export const GeneratePanel: React.FC = () => {
     setSelectedIndices(allIndices);
   };
 
-  const handleSaveSelected = async () => {
+  const handleSaveSelected = () => {
+    const indicesToSave = selectedIndices.length > 0 ? selectedIndices : generatedQuestions.map((_, idx) => idx);
+    if (indicesToSave.length === 0) {
+      toast.error('Pilih minimal 1 soal untuk disimpan!');
+      return;
+    }
+    // Pre-populate package name if skill has a name and not already set
+    if (!savePackageName && selectedSkill?.namaSkill) {
+      const dateStr = new Date().toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+      setSavePackageName(`${selectedSkill.namaSkill} - ${dateStr}`);
+    }
+    setIsSaveModalOpen(true);
+  };
+
+  const confirmSaveToBank = async (overridePkg?: string) => {
     const indicesToSave = selectedIndices.length > 0 ? selectedIndices : generatedQuestions.map((_, idx) => idx);
     if (indicesToSave.length === 0) {
       toast.error('Pilih minimal 1 soal untuk disimpan!');
       return;
     }
 
+    const pkg = (overridePkg !== undefined ? overridePkg : savePackageName).trim();
     const selectedQuestions = indicesToSave.map(idx => generatedQuestions[idx]);
     const payload = {
       questions: selectedQuestions,
       skillId: selectedSkill?.id,
+      packageName: pkg || undefined,
       config: {
         subtes,
         topik: selectedTopics,
@@ -1037,8 +1101,9 @@ export const GeneratePanel: React.FC = () => {
     try {
       const result = await aiGeneratorApi.saveQuestions(payload);
       localStorage.removeItem(CACHE_KEY);
-      toast.success(`${result.saved} soal berhasil disimpan ke Bank Soal!`);
-      navigate('/questions');
+      toast.success(`${result.saved} soal berhasil disimpan ke Bank Soal ${pkg ? `(Paket "${pkg}")` : ''}!`);
+      setIsSaveModalOpen(false);
+      navigate(pkg ? `/questions?packageName=${encodeURIComponent(pkg)}` : '/questions');
     } catch (err: any) {
       toast.error(err.message || 'Gagal menyimpan soal.');
     }
@@ -1192,25 +1257,118 @@ export const GeneratePanel: React.FC = () => {
             </button>
           </div>
 
-          {/* Skill Selector */}
-          <div>
-            <label className="block text-xs font-bold text-[#64748B] mb-1.5">
-              Pilih Skill Prompt
-            </label>
-            <select
-              value={selectedSkill?.id || ''}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                const found = skills.find(s => s.id === e.target.value);
-                if (found) handleSkillSelect(found);
-              }}
-              className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold"
+          {/* Skill Selector (Searchable Combobox) */}
+          <div ref={skillDropdownRef} className="relative">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-[#64748B]">
+                Pilih Skill Prompt
+              </label>
+              {skills.length > 0 && (
+                <span className="text-[10px] text-[#7C3AED] font-semibold">
+                  {skills.length} Skill Tersedia
+                </span>
+              )}
+            </div>
+
+            {/* Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsSkillDropdownOpen(prev => !prev)}
+              className={`w-full min-h-[42px] px-3.5 py-2 border rounded-xl text-left flex items-center justify-between gap-2 shadow-sm transition-all bg-white ${
+                isSkillDropdownOpen 
+                  ? 'border-[#7C3AED] ring-2 ring-purple-100' 
+                  : 'border-[#CBD5E1] hover:border-[#7C3AED]'
+              }`}
             >
-              {skills.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.namaSkill} ({s.subtes})
-                </option>
-              ))}
-            </select>
+              <div className="flex-1 min-w-0">
+                {selectedSkill ? (
+                  <div>
+                    <div className="text-xs font-bold text-[#0F172A] truncate">
+                      {selectedSkill.namaSkill}
+                    </div>
+                    <div className="text-[10px] text-[#64748B] font-medium truncate mt-0.5">
+                      Subtes: <span className="text-[#7C3AED] font-semibold">{selectedSkill.subtes}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-xs text-[#94A3B8] font-medium">-- Pilih Skill Prompt --</span>
+                )}
+              </div>
+              <ChevronDown 
+                className={`w-4 h-4 text-[#64748B] transition-transform duration-200 shrink-0 ${
+                  isSkillDropdownOpen ? 'rotate-180 text-[#7C3AED]' : ''
+                }`} 
+              />
+            </button>
+
+            {/* Dropdown Popover */}
+            {isSkillDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-[#CBD5E1] rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                {/* Search Input */}
+                <div className="p-2 border-b border-[#F1F5F9] bg-[#F8FAFC] flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 ml-1" />
+                  <input
+                    ref={skillSearchInputRef}
+                    type="text"
+                    placeholder="Cari nama skill / subtes..."
+                    value={skillSearchQuery}
+                    onChange={(e) => setSkillSearchQuery(e.target.value)}
+                    className="w-full text-xs bg-transparent text-[#0F172A] placeholder-[#94A3B8] focus:outline-none font-medium"
+                  />
+                  {skillSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSkillSearchQuery('')}
+                      className="p-1 hover:bg-slate-200 rounded transition-colors text-[#94A3B8] hover:text-[#0F172A]"
+                      title="Hapus pencarian"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Options List */}
+                <div className="max-h-64 overflow-y-auto p-1.5 space-y-1">
+                  {filteredSkills.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-[#94A3B8]">
+                      Tidak ada skill yang cocok dengan "{skillSearchQuery}"
+                    </div>
+                  ) : (
+                    filteredSkills.map(s => {
+                      const isSelected = selectedSkill?.id === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            handleSkillSelect(s);
+                            setIsSkillDropdownOpen(false);
+                            setSkillSearchQuery('');
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center justify-between gap-2 ${
+                            isSelected
+                              ? 'bg-purple-50 text-[#7C3AED] font-bold border border-purple-200'
+                              : 'text-[#1E293B] hover:bg-[#F1F5F9] font-medium'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-semibold text-xs">
+                              {s.namaSkill}
+                            </div>
+                            <div className="text-[10px] text-[#64748B] truncate mt-0.5">
+                              {s.subtes}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Subtest (Autofilled / Override) */}
@@ -1981,6 +2139,107 @@ export const GeneratePanel: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Modal Simpan ke Paket */}
+      <Modal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        title="Simpan Soal ke Bank Soal"
+      >
+        <div className="space-y-4 pt-1">
+          <div className="bg-purple-50 border border-purple-200/70 rounded-xl p-3.5 text-xs text-purple-900 flex items-start gap-2.5">
+            <Package className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+            <p>
+              Menyimpan <strong className="font-extrabold">{selectedIndices.length > 0 ? selectedIndices.length : generatedQuestions.length} soal</strong> terpilih ke Bank Soal. Kelompokkan ke dalam nama paket agar tidak bercampur dengan paket lainnya.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#0F172A] mb-1.5">
+              Nama Paket / Batch Soal
+            </label>
+            <input
+              type="text"
+              list="existing-ai-packages-list"
+              value={savePackageName}
+              onChange={(e) => setSavePackageName(e.target.value)}
+              placeholder="e.g. Tryout Akbar UTBK 2026 Batch 1, Latihan TKA Bab 1..."
+              className="w-full h-10 px-3.5 text-xs sm:text-sm bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold transition-all"
+              autoFocus
+            />
+            <datalist id="existing-ai-packages-list">
+              {existingPackages.map((pkg) => (
+                <option key={pkg.name} value={pkg.name}>
+                  {pkg.name} ({pkg.count} soal)
+                </option>
+              ))}
+            </datalist>
+            <p className="text-[11px] text-[#64748B] mt-1 font-medium">
+              Ketik nama paket baru atau pilih dari paket yang sudah ada agar tersusun rapi.
+            </p>
+          </div>
+
+          {existingPackages.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
+                Pilih Cepat Paket yang Ada:
+              </span>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                {existingPackages.map((pkg) => (
+                  <button
+                    key={pkg.name}
+                    type="button"
+                    onClick={() => setSavePackageName(pkg.name)}
+                    className={`text-xs px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition-all ${
+                      savePackageName === pkg.name
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                        : 'bg-[#F8FAFC] border-[#CBD5E1] text-[#475569] hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300'
+                    }`}
+                  >
+                    <Package className="h-3 w-3 shrink-0" />
+                    <span className="truncate max-w-[180px]">{pkg.name}</span>
+                    <span className="text-[10px] opacity-75">({pkg.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-4 border-t border-[#CBD5E1]/40 mt-5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => confirmSaveToBank('')}
+              className="text-xs font-bold text-[#64748B] border-[#CBD5E1]"
+            >
+              Simpan Tanpa Paket
+            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSaveModalOpen(false)}
+                className="text-xs font-bold border-[#CBD5E1]"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                variant="ai"
+                size="sm"
+                onClick={() => confirmSaveToBank()}
+                className="text-xs font-bold shadow-sm flex items-center gap-1.5"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>Simpan ke Bank Soal</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

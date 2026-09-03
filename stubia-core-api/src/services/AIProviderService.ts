@@ -779,6 +779,7 @@ ${typeLines}
 
     const sessionSalt = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const isEnglish = config.subtes.toLowerCase().includes('inggris') || config.subtes.toLowerCase().includes('english');
+    const isFrench = config.subtes.toLowerCase().includes('prancis') || config.subtes.toLowerCase().includes('french');
 
     const englishSpecificSection = isEnglish ? `
 [ATURAN BAHASA KHUSUS MAPEL BAHASA INGGRIS — WAJIB DIPATUHI]
@@ -789,8 +790,19 @@ ${typeLines}
 - Label Kolom (untuk tipe complex_mc_tf): Gunakan "TRUE / FALSE" atau "SESUAI / TIDAK SESUAI".
 ` : '';
 
+    const frenchSpecificSection = isFrench ? `
+[ATURAN BAHASA KHUSUS MAPEL BAHASA PRANCIS — WAJIB DIPATUHI 100%]
+- Teks STIMULUS (Compréhension Écrite): WAJIB 100% BAHASA PRANCIS level A2-2 CECRL (perhatikan aksen: é, è, ê, à, ç, ô, û).
+- Kalimat SOAL (Question Stem): WAJIB 100% BAHASA PRANCIS (DILARANG menggunakan Bahasa Indonesia untuk pertanyaan!).
+- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB 100% BAHASA PRANCIS (DILARANG menggunakan Bahasa Indonesia untuk opsi!).
+- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi analisis dan kutipan kalimat bukti dari teks bahasa Prancis beserta terjemahan dan alasannya ke Bahasa Indonesia).
+- Label Kolom (untuk tipe complex_mc_tf): Gunakan "VRAI / FAUX".
+` : '';
+
     const languagePoint = isEnglish
       ? '4. KHUSUS BAHASA INGGRIS: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Inggris alami & gramatikal. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
+      : isFrench
+      ? '4. KHUSUS BAHASA PRANCIS: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Prancis level A2-2 CECRL. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : '4. Menggunakan bahasa Indonesia yang baku sesuai EYD/PUEBI.';
 
     return `
@@ -808,6 +820,7 @@ ${imagePromptGuideline}
 ${difficultyGuideline}
 ${typeDistributionGuideline}
 ${englishSpecificSection}
+${frenchSpecificSection}
 
 Pastikan setiap soal:
 1. Sesuai dengan instruksi akademik dan larangan di system prompt.

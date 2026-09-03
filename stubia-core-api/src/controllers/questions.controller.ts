@@ -72,7 +72,7 @@ export const checkSimilarityEndpoint = async (req: AuthenticatedRequest, res: Re
 
 export const getQuestions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { subtes, topic, difficulty, status, source, modelUsed, search, limit = '20', page = '1' } = req.query;
+    const { subtes, topic, difficulty, status, source, modelUsed, packageName, search, limit = '20', page = '1' } = req.query;
 
     const parsedLimit = parseInt(limit as string) || 20;
     const parsedPage = parseInt(page as string) || 1;
@@ -86,6 +86,14 @@ export const getQuestions = async (req: AuthenticatedRequest, res: Response, nex
     if (status) where.status = status as QuestionStatus;
     if (source) where.source = source as QuestionSource;
     if (modelUsed) where.modelUsed = modelUsed as string;
+    
+    if (packageName) {
+      if (packageName === 'none' || packageName === '__none__') {
+        where.packageName = null;
+      } else {
+        where.packageName = packageName as string;
+      }
+    }
     
     if (search) {
       where.soalText = {
@@ -296,7 +304,7 @@ export const deleteQuestion = async (req: AuthenticatedRequest, res: Response, n
 
 export const exportQuestions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { subtes, topic, difficulty, status, source, limit = '100' } = req.query;
+    const { subtes, topic, difficulty, status, source, packageName, limit = '100' } = req.query;
 
     const parsedLimit = Math.min(parseInt(limit as string) || 100, 500);
 
@@ -306,6 +314,13 @@ export const exportQuestions = async (req: AuthenticatedRequest, res: Response, 
     if (difficulty) where.difficulty = difficulty as Difficulty;
     if (status) where.status = status as QuestionStatus;
     if (source) where.source = source as QuestionSource;
+    if (packageName) {
+      if (packageName === 'none' || packageName === '__none__') {
+        where.packageName = null;
+      } else {
+        where.packageName = packageName as string;
+      }
+    }
 
     const questions = await prisma.question.findMany({
       where,
@@ -313,7 +328,7 @@ export const exportQuestions = async (req: AuthenticatedRequest, res: Response, 
       orderBy: { createdAt: 'desc' },
     });
 
-    const subtesName = (subtes as string) || 'Semua';
+    const subtesName = (packageName as string) || (subtes as string) || 'Semua';
     const workbook = await exportService.exportQuestionsToExcel(questions, subtesName);
 
     const timestamp = Date.now();
@@ -333,3 +348,56 @@ export const exportQuestions = async (req: AuthenticatedRequest, res: Response, 
     next(error);
   }
 };
+
+// Get list of distinct packages with question count
+export const getPackagesList = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const packages = await prisma.question.groupBy({
+      by: ['packageName'],
+      _count: { id: true },
+      orderBy: {
+        _count: { id: 'desc' },
+      },
+    });
+
+    const result = packages
+      .filter((p) => p.packageName !== null && p.packageName.trim().length > 0)
+      .map((p) => ({
+        name: p.packageName as string,
+        count: p._count.id,
+      }));
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Assign/Move multiple questions into a package
+export const assignQuestionsPackage = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { questionIds, packageName } = req.body;
+    if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+      throw new AppError('Pilih minimal 1 soal untuk dimasukkan ke paket', 400, 'VALIDATION_ERROR');
+    }
+
+    const cleanPackageName = typeof packageName === 'string' && packageName.trim() ? packageName.trim() : null;
+
+    const updateRes = await prisma.question.updateMany({
+      where: { id: { in: questionIds } },
+      data: { packageName: cleanPackageName },
+    });
+
+    res.json({
+      success: true,
+      message: `${updateRes.count} soal berhasil ${cleanPackageName ? `dikelompokkan ke paket "${cleanPackageName}"` : 'dikeluarkan dari paket'}`,
+      data: { updatedCount: updateRes.count },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

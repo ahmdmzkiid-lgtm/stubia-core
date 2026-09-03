@@ -12,10 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Package,
   MessageSquare,
   UserCog,
-  GraduationCap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,7 +26,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }) => {
   const { user, clearAuth } = useAuthStore();
   const location = useLocation();
-  const isChildActive = ['/packages', '/questions', '/ai-generator'].includes(location.pathname);
+  const isChildActive = ['/questions', '/ai-generator'].includes(location.pathname);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(isChildActive);
   const [totalUnread, setTotalUnread] = useState<number>(0);
 
@@ -82,6 +80,60 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
     clearAuth();
   };
 
+  const getRoleBadgeStyle = (role?: string) => {
+    switch (role) {
+      case 'super_admin':
+        return {
+          gradient: 'from-[#1B3FAB] via-indigo-600 to-sky-500',
+          badge: 'bg-blue-50 text-[#1B3FAB] border-blue-200',
+          label: 'Super Admin',
+        };
+      case 'academic_manager':
+        return {
+          gradient: 'from-purple-700 via-purple-600 to-indigo-500',
+          badge: 'bg-purple-50 text-purple-700 border-purple-200',
+          label: 'Academic Manager',
+        };
+      case 'content_creator':
+        return {
+          gradient: 'from-emerald-600 via-teal-600 to-emerald-500',
+          badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          label: 'Content Creator',
+        };
+      case 'hr_ops':
+        return {
+          gradient: 'from-amber-600 via-orange-600 to-amber-500',
+          badge: 'bg-amber-50 text-amber-700 border-amber-200',
+          label: 'HR & Ops',
+        };
+      case 'finance_officer':
+        return {
+          gradient: 'from-cyan-600 via-blue-600 to-teal-600',
+          badge: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+          label: 'Finance Officer',
+        };
+      default:
+        return {
+          gradient: 'from-slate-600 to-slate-800',
+          badge: 'bg-slate-100 text-slate-700 border-slate-200',
+          label: 'Staff',
+        };
+    }
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return '??';
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map((n: string) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
+  const roleStyle = getRoleBadgeStyle(user?.role);
+
   interface MenuItem {
     name: string;
     path?: string;
@@ -118,12 +170,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
           path: '/ai-generator',
           icon: Sparkles,
           roles: ['super_admin', 'academic_manager', 'content_creator'],
-        },
-        {
-          name: 'Generator Paket',
-          path: '/packages',
-          icon: Package,
-          roles: ['super_admin', 'academic_manager'],
         },
       ],
     },
@@ -178,22 +224,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
       }`}
     >
       <div>
-        {/* Header / Logo using Stubia.id GraduationCap Brand Icon */}
-        <div className={`h-14 flex items-center px-4 border-b border-[#CBD5E1] ${
-          isCollapsed ? 'justify-center' : 'justify-between'
-        }`}>
-          <div className="flex items-center gap-2.5">
-            <GraduationCap className="h-6 w-6 text-[#1B3FAB] shrink-0" />
-            {!isCollapsed && (
-              <span className="text-sm font-extrabold tracking-wider uppercase text-[#1B3FAB]">
-                Stubia <span className="text-slate-800">Core</span>
-              </span>
-            )}
-          </div>
-          {!isCollapsed && (
-            <span className="text-[8px] bg-slate-100 text-slate-600 border border-slate-200 font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-95 shrink-0">
-              {user?.role.replace('_', ' ')}
-            </span>
+        {/* Header / Logo using official Stubia.id Brand Icon */}
+        <div className="h-14 flex items-center justify-center px-4 border-b border-[#CBD5E1]">
+          {isCollapsed ? (
+            <img
+              src="/favicon.png"
+              alt="Stubia"
+              className="h-7 w-7 object-contain drop-shadow-xs"
+            />
+          ) : (
+            <img
+              src="/stubiabrandicon.webp"
+              alt="Stubia.id"
+              className="h-7 w-auto object-contain"
+            />
           )}
         </div>
 
@@ -313,6 +357,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, i
 
       {/* Footer controls */}
       <div className="p-2 border-t border-[#CBD5E1] space-y-1 bg-slate-50/50">
+        {/* User Profile Card in Sidebar */}
+        {user && (
+          <div className="mb-2">
+            {!isCollapsed ? (
+              <div className="p-2 rounded-xl bg-white border border-[#CBD5E1] shadow-2xs flex items-center gap-2.5">
+                <div className="relative shrink-0">
+                  <div
+                    className={`h-8 w-8 rounded-full bg-gradient-to-tr ${roleStyle.gradient} text-white flex items-center justify-center font-black text-[11px] shadow-xs ring-1 ring-white`}
+                  >
+                    {getInitials(user.name)}
+                  </div>
+                  <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-[#0F172A] truncate leading-tight">
+                    {user.name}
+                  </p>
+                  <span className={`inline-block text-[8px] font-extrabold px-1.5 py-0.2 rounded border uppercase tracking-wider mt-0.5 ${roleStyle.badge}`}>
+                    {roleStyle.label}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center" title={`${user.name} (${roleStyle.label})`}>
+                <div className="relative">
+                  <div
+                    className={`h-8 w-8 rounded-full bg-gradient-to-tr ${roleStyle.gradient} text-white flex items-center justify-center font-black text-[11px] shadow-xs ring-1 ring-white`}
+                  >
+                    {getInitials(user.name)}
+                  </div>
+                  <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Toggle Collapse */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}

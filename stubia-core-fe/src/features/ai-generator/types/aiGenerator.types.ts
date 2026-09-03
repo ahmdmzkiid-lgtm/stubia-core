@@ -53,6 +53,7 @@ export interface GeneratedQuestion {
   tingkat_kesulitan?: string;
   label_kolom?: string;
   prompt_gambar?: string | null;
+  packageName?: string | null;
   
   // Similarity status added by backend check
   similarityStatus: 'SAFE' | 'WARNING' | 'BLOCKED';

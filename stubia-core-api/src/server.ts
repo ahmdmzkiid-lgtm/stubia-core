@@ -9,7 +9,6 @@ import { AppError } from './errors/AppError';
 import authRoutes from './routes/auth.routes';
 import aiRoutes from './routes/ai.routes';
 import questionsRoutes from './routes/questions.routes';
-import packagesRoutes from './routes/packages.routes';
 import tasksRoutes from './routes/tasks.routes';
 import financeRoutes from './routes/finance.routes';
 import documentsRoutes from './routes/documents.routes';
@@ -55,7 +54,14 @@ const allowedOrigins = getAllowedOrigins();
 const isAllowedOrigin = (origin?: string): boolean => {
   if (!origin) return true; // Server-to-server or tools
   if (allowedOrigins.includes(origin)) return true;
-  if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) return true; // Support Vercel and Render domains
+  if (
+    origin.endsWith('.vercel.app') ||
+    origin.endsWith('.onrender.com') ||
+    origin.endsWith('.stubia.id') ||
+    origin === 'https://stubia.id'
+  ) {
+    return true; // Support Vercel, Render, and custom stubia.id domains
+  }
   if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) return true;
   return false;
 };
@@ -138,7 +144,6 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/questions', questionsRoutes);
-app.use('/api/packages', packagesRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/documents', documentsRoutes);

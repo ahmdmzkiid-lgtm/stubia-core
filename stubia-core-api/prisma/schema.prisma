@@ -120,6 +120,7 @@ model Question {
   status       QuestionStatus @default(DRAFT)
   source       QuestionSource @default(MANUAL)
   modelUsed    String?        @map("model_used")   // "claude-sonnet-4-6", etc
+  packageName  String?        @map("package_name") // Nama paket/batch soal
   
   skill        AISkill?       @relation(fields: [skillId], references: [id])
   skillId      String?        @map("skill_id")
@@ -132,6 +133,7 @@ model Question {
   
   createdAt    DateTime       @default(now()) @map("created_at")
 
+  @@index([packageName])
   @@map("questions")
 }
 

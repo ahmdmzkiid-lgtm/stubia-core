@@ -26,6 +26,7 @@ export interface Question {
   status: QuestionStatus;
   source: QuestionSource;
   modelUsed?: string | null;
+  packageName?: string | null;
   skillId?: string | null;
   createdById: string;
   approvedById?: string | null;
@@ -42,9 +43,15 @@ export interface QuestionFilters {
   status?: QuestionStatus;
   source?: QuestionSource;
   modelUsed?: string;
+  packageName?: string;
   search?: string;
   page?: number;
   limit?: number;
+}
+
+export interface QuestionPackageItem {
+  name: string;
+  count: number;
 }
 
 export interface SimilarityResult {

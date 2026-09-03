@@ -169,7 +169,7 @@ export const generateQuestions = async (req: AuthenticatedRequest, res: Response
 
 export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { questions, skillId, config, modelUsed, tokensUsed, costEstimateUsd, durationMs } = req.body;
+    const { questions, skillId, config, modelUsed, tokensUsed, costEstimateUsd, durationMs, packageName } = req.body;
 
     if (!req.user) {
       throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
@@ -183,6 +183,7 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
     let blockedCount = 0;
 
     const creatorId = req.user.userId;
+    const finalPackageName = packageName && typeof packageName === 'string' && packageName.trim() ? packageName.trim() : null;
 
     for (const q of questions) {
       // Re-validate similarity on both Soal and Stimulus (anti-bypass validation)
@@ -217,6 +218,7 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
           source: QuestionSource.AI_GENERATED,
           modelUsed: modelUsed || defaultModel,
           skillId: skillId || null,
+          packageName: finalPackageName || q.packageName || null,
           createdById: creatorId,
         },
       });
@@ -242,26 +244,6 @@ export const saveGeneratedQuestions = async (req: AuthenticatedRequest, res: Res
           durationMs: durationMs || 0,
         },
       });
-
-      // Insert debit payroll log or finance ledger log for AI Cost if cost is higher than 0
-      if (costEstimateUsd && costEstimateUsd > 0) {
-        // Find super admin or default recorder
-        const recorder = await prisma.user.findFirst({
-          where: { role: 'super_admin' }
-        });
-        if (recorder) {
-          await prisma.cashflowEntry.create({
-            data: {
-              type: 'debit',
-              amount: costEstimateUsd,
-              category: 'AI_COST',
-              description: `AI Cost estimate for generating ${questions.length} questions using ${modelUsed || defaultModel}.`,
-              refType: 'ai_generation',
-              recordedById: recorder.id,
-            }
-          });
-        }
-      }
     }
 
     res.json({

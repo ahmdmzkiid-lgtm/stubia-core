@@ -11,7 +11,6 @@ import { GeneratePanel } from './features/ai-generator/components/GeneratePanel'
 import { SkillLibrary } from './features/ai-generator/components/SkillLibrary';
 import { QuestionTable } from './features/questions/components/QuestionTable';
 import { QuestionEditor } from './features/questions/components/QuestionEditor';
-import { PackageGeneratorDashboard } from './features/packages/components/PackageGeneratorDashboard';
 import { TasksDashboard } from './features/tasks/components/TasksDashboard';
 import { FinanceModule } from './features/finance/components/FinanceModule';
 import { BlueprintModule } from './features/documents/components/BlueprintModule';
@@ -89,7 +88,6 @@ const App: React.FC = () => {
             <Route path="questions/edit/:id" element={<QuestionEditor />} />
             <Route path="ai-generator" element={<GeneratePanel />} />
             <Route path="ai-generator/skills" element={<SkillLibrary />} />
-            <Route path="packages" element={<RequireAuth allowedRoles={['super_admin', 'academic_manager']}><PackageGeneratorDashboard /></RequireAuth>} />
             <Route path="tasks" element={<TasksDashboard />} />
             <Route path="finance" element={<RequireAuth allowedRoles={['super_admin', 'finance_officer']}><FinanceModule /></RequireAuth>} />
             <Route path="blueprint" element={<BlueprintModule />} />

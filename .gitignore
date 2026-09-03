@@ -37,3 +37,8 @@ Thumbs.db
 # User uploaded files (Secure Document Drive & Task proofs)
 stubia-core-api/public/uploads/*
 !stubia-core-api/public/uploads/.gitkeep
+
+# Database seeds & sensitive local scripts
+stubia-core-api/prisma/seed.ts
+prisma/seed.ts
+

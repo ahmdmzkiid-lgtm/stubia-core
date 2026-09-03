@@ -5,11 +5,12 @@ import { Search, FilterX } from 'lucide-react';
 
 interface QuestionFilterProps {
   filters: QuestionFilters;
+  packages?: Array<{ name: string; count: number }>;
   onChange: (filters: QuestionFilters) => void;
   onClear: () => void;
 }
 
-export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChange, onClear }) => {
+export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, packages = [], onChange, onClear }) => {
   const handleSelectChange = (field: keyof QuestionFilters, val: string) => {
     onChange({ ...filters, [field]: val || undefined, page: 1 });
   };
@@ -20,7 +21,7 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
 
   return (
     <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {/* Search */}
         <div className="relative">
           <label className="block text-xs font-bold text-[#64748B] mb-1.5">Cari Soal</label>
@@ -41,7 +42,7 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
           <select
             value={filters.subtes || ''}
             onChange={(e) => handleSelectChange('subtes', e.target.value)}
-            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
+            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold truncate"
           >
             <option value="">Semua Subtes</option>
             <option value="Penalaran Matematika">Penalaran Matematika</option>
@@ -71,13 +72,31 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
           </select>
         </div>
 
+        {/* Paket Soal Filter */}
+        <div>
+          <label className="block text-xs font-bold text-[#64748B] mb-1.5">📦 Paket / Batch</label>
+          <select
+            value={filters.packageName || ''}
+            onChange={(e) => handleSelectChange('packageName', e.target.value)}
+            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent font-semibold truncate"
+          >
+            <option value="">Semua Paket</option>
+            <option value="none">Tanpa Paket (Umum)</option>
+            {packages.map((pkg) => (
+              <option key={pkg.name} value={pkg.name}>
+                📦 {pkg.name} ({pkg.count} soal)
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Difficulty */}
         <div>
           <label className="block text-xs font-bold text-[#64748B] mb-1.5">Tingkat Kesulitan</label>
           <select
             value={filters.difficulty || ''}
             onChange={(e) => handleSelectChange('difficulty', e.target.value)}
-            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
+            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
           >
             <option value="">Semua Kesulitan</option>
             <option value="EASY">EASY</option>
@@ -92,7 +111,7 @@ export const QuestionFilter: React.FC<QuestionFilterProps> = ({ filters, onChang
           <select
             value={filters.status || ''}
             onChange={(e) => handleSelectChange('status', e.target.value)}
-            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
+            className="w-full h-10 px-3 border border-[#CBD5E1] rounded-lg text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1B3FAB] focus:border-transparent font-semibold"
           >
             <option value="">Semua Status</option>
             <option value="DRAFT">DRAFT</option>

@@ -79,6 +79,7 @@ export const aiGeneratorApi = {
     tokensUsed?: number;
     costEstimateUsd?: number;
     durationMs?: number;
+    packageName?: string;
   }): Promise<{ saved: number; blocked: number }> => {
     const res = await authFetch('/api/ai/save-generated-questions', {
       method: 'POST',

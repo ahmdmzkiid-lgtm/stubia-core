@@ -105,4 +105,24 @@ export const questionsApi = {
     // To handle download, we will use a Fetch trigger in the frontend button that downloads as blob.
     return `/api/questions/export?${params.toString()}`;
   },
+
+  // Get distinct list of packages with question count
+  getPackages: async (): Promise<Array<{ name: string; count: number }>> => {
+    const res = await fetch('/api/questions/packages', { headers: getHeaders() });
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || 'Gagal memuat daftar paket');
+    return result.data;
+  },
+
+  // Assign or move questions into a package
+  assignPackage: async (questionIds: string[], packageName: string | null): Promise<string> => {
+    const res = await fetch('/api/questions/assign-package', {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ questionIds, packageName }),
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || 'Gagal mengelompokkan soal ke paket');
+    return result.message;
+  },
 };
