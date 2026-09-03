@@ -53,16 +53,25 @@ const allowedOrigins = getAllowedOrigins();
 
 const isAllowedOrigin = (origin?: string): boolean => {
   if (!origin) return true; // Server-to-server or tools
-  if (allowedOrigins.includes(origin)) return true;
-  if (
-    origin.endsWith('.vercel.app') ||
-    origin.endsWith('.onrender.com') ||
-    origin.endsWith('.stubia.id') ||
-    origin === 'https://stubia.id'
-  ) {
-    return true; // Support Vercel, Render, and custom stubia.id domains
+  const cleanOrigin = origin.trim().replace(/\/+$/, '');
+  if (allowedOrigins.includes(cleanOrigin)) return true;
+  try {
+    const parsed = new URL(cleanOrigin);
+    const host = parsed.hostname;
+    if (
+      host === 'stubia.id' ||
+      host.endsWith('.stubia.id') ||
+      host.endsWith('.vercel.app') ||
+      host.endsWith('.railway.app') ||
+      host.endsWith('.onrender.com') ||
+      host === 'localhost' ||
+      host === '127.0.0.1'
+    ) {
+      return true; // Support Vercel, Render, Railway, and custom stubia.id domains
+    }
+  } catch {
+    if (cleanOrigin.includes('stubia.id') || cleanOrigin.includes('vercel.app')) return true;
   }
-  if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) return true;
   return false;
 };
 
@@ -73,7 +82,7 @@ const io = new Server(server, {
       if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`Socket CORS blocked for origin: ${origin}`), false);
+      return callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
@@ -82,25 +91,29 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
-// HTTP Security Headers via Helmet
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded files to be displayed by frontend
-  })
-);
-
-// General middlewares
+// General middlewares - CORS mounted first to ensure preflight & cross-origin requests always succeed
 app.use(
   cors({
     origin: (origin, callback) => {
       if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`Blocked by CORS policy: Origin ${origin} not allowed`));
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Disposition', 'Content-Length'],
+  })
+);
+
+// Preflight handler
+app.options('*', cors());
+
+// HTTP Security Headers via Helmet
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded files to be displayed by frontend
   })
 );
 
@@ -166,6 +179,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
   const statusCode = err.statusCode || 500;
   const errorCode = err.errorCode || 'INTERNAL_ERROR';
   

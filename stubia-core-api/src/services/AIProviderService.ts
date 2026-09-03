@@ -72,6 +72,7 @@ export interface AIAdapter {
 export class OpenAICompatibleAdapter implements AIAdapter {
   private apiKey: string;
   private baseUrl: string;
+  private static failedModelsUntil: Map<string, number> = new Map();
 
   constructor() {
     this.apiKey = process.env.AI_API_KEY || '';
@@ -103,6 +104,14 @@ export class OpenAICompatibleAdapter implements AIAdapter {
     for (let i = 0; i < modelsToTry.length; i++) {
       const activeModel = modelsToTry[i];
       const isLast = i === modelsToTry.length - 1;
+
+      // If this model recently timed out in a concurrent batch, skip it immediately to avoid wasting time
+      const cooldownUntil = OpenAICompatibleAdapter.failedModelsUntil.get(activeModel) || 0;
+      if (cooldownUntil > Date.now() && !isLast) {
+        console.log(`[AI Smart Combo] Model ${activeModel} is in cooldown (timed out recently). Auto-skipping to next model...`);
+        continue;
+      }
+
       console.log(`[AI Smart Combo] Trying model ${i + 1}/${modelsToTry.length}: ${activeModel}`);
 
       try {
@@ -122,7 +131,8 @@ export class OpenAICompatibleAdapter implements AIAdapter {
             temperature: 0.85,
             max_tokens: 8192,
           }),
-          signal: AbortSignal.timeout(75_000), // 75-second hard limit per model
+          // 22-second hard limit per model attempt so auto-failover happens quickly before Railway/Vercel proxy 60s timeout
+          signal: AbortSignal.timeout(22_000),
         });
 
         if (!response.ok) {
@@ -130,6 +140,10 @@ export class OpenAICompatibleAdapter implements AIAdapter {
           console.warn(`[AI Smart Combo] Model ${activeModel} error HTTP ${response.status}: ${errBody.substring(0, 150)}`);
           if (response.status === 401) {
             throw new AppError(`AI Provider authentication error: ${errBody.substring(0, 200)}`, 401, 'AI_PROVIDER_ERROR');
+          }
+          // Mark 5xx or server errors for cooldown
+          if (response.status >= 500) {
+            OpenAICompatibleAdapter.failedModelsUntil.set(activeModel, Date.now() + 60_000);
           }
           lastError = new Error(`HTTP ${response.status} from ${activeModel}`);
           if (!isLast) {
@@ -164,6 +178,8 @@ export class OpenAICompatibleAdapter implements AIAdapter {
             console.warn(`[AI Smart Combo] Model ${activeModel} returned empty response.`);
             if (!isLast) continue;
           } else {
+            // Model succeeded, clear cooldown
+            OpenAICompatibleAdapter.failedModelsUntil.delete(activeModel);
             console.log(`[AI Smart Combo] Success with ${activeModel}! (${text.length} chars, ${tokensUsed} tokens)`);
             return { text, tokensUsed };
           }
@@ -172,6 +188,8 @@ export class OpenAICompatibleAdapter implements AIAdapter {
         if (err instanceof AppError && err.statusCode === 401) throw err;
         lastError = err;
         console.warn(`[AI Smart Combo] Model ${activeModel} request failed: ${err.message}.`);
+        // Put timed out model in cooldown for 60s so concurrent and subsequent batches immediately use fast models
+        OpenAICompatibleAdapter.failedModelsUntil.set(activeModel, Date.now() + 60_000);
         if (!isLast) {
           console.log(`[AI Smart Combo] Auto-failover: immediately switching to next model...`);
           continue;
