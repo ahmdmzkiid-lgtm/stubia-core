@@ -805,38 +805,38 @@ ${typeLines}
 
     const germanSpecificSection = isGerman ? `
 [ATURAN BAHASA KHUSUS MAPEL BAHASA JERMAN — WAJIB DIPATUHI 100%]
-- Teks STIMULUS (Leseverstehen): WAJIB 100% BAHASA JERMAN level A1 Plus–A2.1 GER/CEFR (perhatikan huruf khusus ä, ö, ü, ß). Teks sederhana 3–100 kata dengan ragam teks fungsional otentik Jerman (Stundenplan, Fahrkarte, Fahrplan, e-mail, Hinweisschilder, Anzeigen, Kochrezepte, dialog/deskripsi).
-- Kalimat SOAL (Question Stem): WAJIB BAHASA INDONESIA (mengikuti konvensi resmi TKA Kemendikdasmen RI).
-- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB BAHASA INDONESIA, KECUALI pada soal jenis Lückentext (teks rumpang) di mana opsi berisi kata/frasa bahasa Jerman, atau soal Reorganisasi (urutan kalimat a-b-c-d).
-- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi analisis logika kunci jawaban dan rujukan kutipan ke bagian teks bahasa Jerman beserta terjemahan dan penjelasannya).
-- Label Kolom (untuk tipe complex_mc_tf): Gunakan "SESUAI / TIDAK SESUAI" atau "BENAR / SALAH".
+- Teks STIMULUS (Leseverstehen): WAJIB 100% BAHASA JERMAN level A1 Plus–A2.1 GER/CEFR (perhatikan huruf khusus ä, ö, ü, ß). Teks sederhana dengan ragam teks fungsional otentik Jerman (Stundenplan, Fahrkarte, Fahrplan, e-mail, Hinweisschilder, Anzeigen, Kochrezepte, dialog/deskripsi).
+- Kalimat SOAL (Frage / Question Stem): WAJIB 100% BAHASA JERMAN level A1 Plus–A2.1 GER (contoh: "Wann findet die Veranstaltung statt?", "Welche Aussage über Thomas ist laut dem Text richtig?"). DILARANG menggunakan Bahasa Indonesia untuk pertanyaan!
+- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB 100% BAHASA JERMAN. DILARANG menggunakan Bahasa Indonesia untuk opsi!
+- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi analisis logika jawaban dan rujukan kutipan ke bagian teks bahasa Jerman beserta terjemahan dan penjelasannya ke Bahasa Indonesia).
+- Label Kolom (untuk tipe complex_mc_tf): Gunakan "RICHTIG / FALSCH" atau "STIMMT / STIMMT NICHT".
 ` : '';
 
     const japaneseSpecificSection = isJapanese ? `
 [ATURAN BAHASA KHUSUS MAPEL BAHASA JEPANG — WAJIB DIPATUHI 100%]
-- Teks STIMULUS (Dokkai / 読解): WAJIB BAHASA JEPANG level A1 JF Standard (gunakan kombinasi Hiragana, Katakana, dan Kanji sangat dasar dengan romaji/furigana pendamping, atau teks pendek 5–50 kata seputar kehidupan sehari-hari dan sekolah).
-- Kalimat SOAL (Question Stem): WAJIB BAHASA INDONESIA (mengikuti konvensi resmi TKA Kemendikdasmen RI).
-- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB BAHASA INDONESIA, KECUALI pada soal melengkapi teks rumpang/kosakata Jepang atau Reorganisasi urutan kata (pola Subjek + Objek + Predikat).
-- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi penjelasan logika jawaban, kutipan teks Jepang dengan cara baca romaji dan arti/terjemahan ringkas).
-- Label Kolom (untuk tipe complex_mc_tf): Gunakan "SESUAI / TIDAK SESUAI" atau "BENAR / SALAH".
+- Teks STIMULUS (Dokkai / 読解): WAJIB 100% BAHASA JEPANG level A1 JF Standard (gunakan kombinasi Hiragana, Katakana, dan Kanji dasar disertai romaji/furigana pendamping, atau teks pendek 5–50 kata seputar kehidupan sehari-hari dan sekolah).
+- Kalimat SOAL (Shitsumon / 質問): WAJIB 100% BAHASA JEPANG level A1 (contoh: "ケンさんの しゅみは なんですか。", "ただしいものは どれですか。", "このぶんしょうの テーマは なんですか。"). DILARANG menggunakan Bahasa Indonesia untuk pertanyaan!
+- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB 100% BAHASA JEPANG level A1. DILARANG menggunakan Bahasa Indonesia untuk opsi!
+- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi penjelasan logika jawaban, kutipan teks Jepang dengan cara baca romaji dan arti/terjemahan ringkas ke Bahasa Indonesia).
+- Label Kolom (untuk tipe complex_mc_tf): Gunakan "正しい / 誤り" atau "SESUAI / TIDAK SESUAI".
 ` : '';
 
     const koreanSpecificSection = isKorean ? `
 [ATURAN BAHASA KHUSUS MAPEL BAHASA KOREA — WAJIB DIPATUHI 100%]
-- Teks STIMULUS (Ilgi / 읽기): WAJIB HURUF HANGEUL standar level TOPIK I Level 1 / CEFR A1 (maksimal 200 karakter Hangeul, ejaan baku standar 표준어 pyojuneo dan spasi 띄어쓰기 ttieosseugi yang tepat). Format teks berupa wacana pendek, memo, pengumuman, pesan teks, atau dialog sederhana seputar situasi sehari-hari dan sekolah.
-- Kalimat SOAL (Question Stem): WAJIB BAHASA INDONESIA (mengikuti konvensi resmi TKA Kemendikdasmen RI).
-- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB BAHASA INDONESIA, KECUALI pada soal melengkapi teks rumpang/partikel/kosakata Hangeul atau Reorganisasi urutan kata/kalimat.
-- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi penjelasan logika jawaban, kutipan teks Hangeul dengan cara baca dan arti/terjemahan ringkas).
-- Label Kolom (untuk tipe complex_mc_tf): Gunakan "SESUAI / TIDAK SESUAI" atau "BENAR / SALAH".
+- Teks STIMULUS (Ilgi / 읽기): WAJIB 100% HURUF HANGEUL standar level TOPIK I Level 1 / CEFR A1 (maksimal 200 karakter Hangeul, ejaan baku standar 표준어 pyojuneo dan spasi 띄어쓰기 ttieosseugi yang tepat). Format teks berupa wacana pendek, memo, pengumuman, pesan teks, atau dialog sederhana.
+- Kalimat SOAL (Jilmun / 질문): WAJIB 100% BAHASA KOREA (Huruf Hangeul) level TOPIK I Level 1 (contoh: "민수의 취미는 무엇입니까?", "글의 내용과 맞는 것은 무엇입니까?", "이 글의 중심 생각으로 알맞은 것을 고르십시오."). DILARANG menggunakan Bahasa Indonesia untuk pertanyaan!
+- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB 100% BAHASA KOREA (Huruf Hangeul). DILARANG menggunakan Bahasa Indonesia untuk opsi!
+- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi penjelasan logika jawaban, kutipan teks Hangeul dengan cara baca dan arti/terjemahan ringkas ke Bahasa Indonesia).
+- Label Kolom (untuk tipe complex_mc_tf): Gunakan "맞음 / 틀림" atau "SESUAI / TIDAK SESUAI".
 ` : '';
 
     const arabicSpecificSection = isArabic ? `
 [ATURAN BAHASA KHUSUS MAPEL BAHASA ARAB — WAJIB DIPATUHI 100%]
 - Teks STIMULUS (al-Qirā'ah / القراءة): WAJIB 100% BAHASA ARAB baku (fusha) berharakat lengkap (tasykil) level SMA/MA (teks naratif 25–50 kosakata atau dialog 5–6 kali tanya jawab seputar kehidupan sehari-hari, sekolah, keluarga, hobi, pekerjaan, pelayanan umum, lingkungan, serta dialog persetujuan/perintah/larangan). DILARANG menulis stimulus tanpa harakat!
-- Kalimat SOAL (Question Stem): WAJIB BAHASA INDONESIA (mengikuti konvensi resmi TKA Kemendikdasmen RI).
-- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB BAHASA INDONESIA, KECUALI pada soal sinonim (مرادف), antonim (ضد), arti mufradat kontekstual, Reorganisasi urutan kata/kalimat, atau analisis gramatika nahwu-sharf di mana opsi berisi kata/frasa Bahasa Arab berharakat.
-- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi analisis logika jawaban, kutipan teks Arab berharakat beserta terjemahan/penjelasan kaidah nahwu/sharf).
-- Label Kolom (untuk tipe complex_mc_tf): Gunakan "SESUAI / TIDAK SESUAI" atau "BENAR / SALAH".
+- Kalimat SOAL (as-Su'āl / السؤال): WAJIB 100% BAHASA ARAB baku (fusha) berharakat lengkap (contoh: "مَاذَا يَفْعَلُ أَحْمَدُ بَعْدَ الصَّلَاةِ؟", "أَيُّ الْعِبَارَاتِ الْآتِيَةِ تُوَافِقُ مَضْمُونَ النَّصِّ؟", "مَا الْفِكْرَةُ الرَّئِيسِيَّةُ لِلنَّصِّ؟"). DILARANG menggunakan Bahasa Indonesia untuk pertanyaan!
+- Pilihan OPSI JAWABAN (A, B, C, D, E): WAJIB 100% BAHASA ARAB baku (fusha) berharakat lengkap. DILARANG menggunakan Bahasa Indonesia untuk opsi!
+- Teks PEMBAHASAN: WAJIB BAHASA INDONESIA (berisi analisis logika jawaban, kutipan teks Arab berharakat beserta terjemahan dan penjelasan kaidah nahwu/sharf ke Bahasa Indonesia).
+- Label Kolom (untuk tipe complex_mc_tf): Gunakan "صحيح / خطأ" atau "SESUAI / TIDAK SESUAI".
 ` : '';
 
     const languagePoint = isEnglish
@@ -844,13 +844,13 @@ ${typeLines}
       : isFrench
       ? '4. KHUSUS BAHASA PRANCIS: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Prancis level A2-2 CECRL. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : isGerman
-      ? '4. KHUSUS BAHASA JERMAN: Stimulus teks bacaan WAJIB 100% Bahasa Jerman level A1 Plus–A2.1 GER. Kalimat soal, opsi jawaban (kecuali Lückentext/Reorganisasi), dan pembahasan WAJIB Bahasa Indonesia.'
+      ? '4. KHUSUS BAHASA JERMAN: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Jerman level A1 Plus–A2.1 GER. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : isJapanese
-      ? '4. KHUSUS BAHASA JEPANG: Stimulus teks bacaan WAJIB Bahasa Jepang level A1 JF Standard (Hiragana/Katakana/Kanji dasar). Kalimat soal, opsi jawaban (kecuali melengkapi kosakata/Reorganisasi), dan pembahasan WAJIB Bahasa Indonesia.'
+      ? '4. KHUSUS BAHASA JEPANG: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Jepang level A1 JF Standard. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : isKorean
-      ? '4. KHUSUS BAHASA KOREA: Stimulus teks bacaan WAJIB Huruf Hangeul standar level TOPIK I Level 1. Kalimat soal, opsi jawaban (kecuali melengkapi kosakata/tata bahasa/Reorganisasi), dan pembahasan WAJIB Bahasa Indonesia.'
+      ? '4. KHUSUS BAHASA KOREA: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Korea (Huruf Hangeul) level TOPIK I Level 1. Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : isArabic
-      ? '4. KHUSUS BAHASA ARAB: Stimulus teks bacaan WAJIB Bahasa Arab baku (fusha) berharakat lengkap (tasykil). Kalimat soal, opsi jawaban (kecuali sinonim/antonim/mufradat/Reorganisasi/nahwu), dan pembahasan WAJIB Bahasa Indonesia.'
+      ? '4. KHUSUS BAHASA ARAB: Stimulus, kalimat soal (stem), dan seluruh opsi (A–E) WAJIB 100% Bahasa Arab baku (fusha) berharakat lengkap (tasykil). Kolom PEMBAHASAN WAJIB Bahasa Indonesia.'
       : '4. Menggunakan bahasa Indonesia yang baku sesuai EYD/PUEBI.';
 
     return `
