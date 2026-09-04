@@ -252,6 +252,77 @@ const DEFAULT_PRANCIS_MATERI_OPTIONS = [
   'Pemahaman Literal – Ungkapan Salam, Berpamitan, dan Harapan (salutations et souhaits)',
 ];
 
+const DEFAULT_JERMAN_MATERI_OPTIONS = [
+  'Pemahaman Literal – Identitas diri (Identität)',
+  'Pemahaman Literal – Kehidupan sekolah (Schulleben)',
+  'Pemahaman Literal – Keluarga (Familien)',
+  'Pemahaman Literal – Tempat tinggal (Wohnen)',
+  'Pemahaman Literal – Aktivitas waktu luang (Freizeitaktivitäten)',
+  'Pemahaman Literal – Pekerjaan dan profesi (Berufe)',
+  'Pemahaman Literal – Makanan dan minuman (Essen und Trinken)',
+  'Pemahaman Literal – Berbelanja (Einkaufen)',
+  'Pemahaman Literal – Perjalanan & Jadwal (Reisen & Fahrplan)',
+  'Pemahaman Inferensial – Kehidupan sekolah (Schulleben)',
+  'Pemahaman Inferensial – Aktivitas waktu luang (Freizeitaktivitäten)',
+  'Pemahaman Inferensial – Perjalanan (Reisen)',
+  'Pemahaman Inferensial – Tempat tinggal (Wohnen)',
+  'Reorganisasi – Aktivitas harian & Sekolah (Tagesablauf & Schulleben)',
+  'Reorganisasi – Rencana perjalanan (Reiseprogramm)',
+];
+
+const DEFAULT_JEPANG_MATERI_OPTIONS = [
+  'Pemahaman Literal – Persalaman (aisatsu)',
+  'Pemahaman Literal – Perkenalan diri (jikoshoukai)',
+  'Pemahaman Literal – Waktu dan jam (jikan)',
+  'Pemahaman Literal – Keluarga (kazoku)',
+  'Pemahaman Literal – Kemampuan (dekirukoto)',
+  'Pemahaman Literal – Kehidupan sekolah (gakkou no seikatsu)',
+  'Pemahaman Literal – Rumah dan ruangan (uchi)',
+  'Pemahaman Literal – Kehidupan sehari-hari (mainichi no seikatsu)',
+  'Pemahaman Literal – Hobi dan kegemaran (shumi)',
+  'Pemahaman Literal – Waktu senggang (himana toki)',
+  'Pemahaman Inferensial – Kehidupan sekolah (gakkou no seikatsu)',
+  'Pemahaman Inferensial – Hobi dan kegiatan (shumi)',
+  'Pemahaman Inferensial – Bentuk lampau dan negasi (masen / mashita)',
+  'Reorganisasi – Pola kalimat dasar SOP (Subjek-Objek-Predikat)',
+  'Reorganisasi – Jadwal kegiatan sehari-hari (mainichi no seikatsu)',
+];
+
+const DEFAULT_KOREA_MATERI_OPTIONS = [
+  'Pemahaman Literal – Salam (인사)',
+  'Pemahaman Literal – Perkenalan diri (자기 소개)',
+  'Pemahaman Literal – Belanja (쇼핑)',
+  'Pemahaman Literal – Hobi (취미)',
+  'Pemahaman Literal – Transportasi (교통)',
+  'Pemahaman Literal – Cuaca (날씨)',
+  'Pemahaman Literal – Kehidupan sehari-hari (일상생활)',
+  'Pemahaman Literal – Kehidupan keluarga (가족생활)',
+  'Pemahaman Literal – Wisata (여행)',
+  'Pemahaman Literal – Kehidupan sekolah (학교활동)',
+  'Pemahaman Inferensial – Kehidupan sekolah (학교활동)',
+  'Pemahaman Inferensial – Hobi dan kegiatan (취미)',
+  'Pemahaman Inferensial – Bentuk negasi dan kala lampau/akan datang (안, 못, -았/었어요, -(으)ㄹ 거예요)',
+  'Reorganisasi – Pola susunan kalimat dasar (문장 구성)',
+  'Reorganisasi – Jadwal dan rencana kegiatan (일정 및 계획)',
+];
+
+const DEFAULT_ARAB_MATERI_OPTIONS = [
+  'Pemahaman Literal – Kehidupan sehari-hari (الحياة اليومية)',
+  'Pemahaman Literal – Kehidupan sekolah (الحياة المدرسية)',
+  'Pemahaman Literal – Kehidupan keluarga (الحياة الأسرية)',
+  'Pemahaman Literal – Hobi dan kegemaran (الهواية)',
+  'Pemahaman Literal – Pekerjaan dan profesi (المهنة)',
+  'Pemahaman Literal – Pelayanan umum (المرافق العامة)',
+  'Pemahaman Literal – Lingkungan sekitar (البيئة)',
+  'Pemahaman Literal – Sinonim dan Antonim kata (المرادف والضد)',
+  'Pemahaman Inferensial – Dialog ungkapan persetujuan (الموافقة)',
+  'Pemahaman Inferensial – Dialog ungkapan perintah (الأمر)',
+  'Pemahaman Inferensial – Dialog ungkapan larangan (النهي)',
+  'Pemahaman Inferensial – Makna teks berbasis kaidah Nahwu dan Sharf (النحو والصرف)',
+  'Reorganisasi – Menyusun kosakata acak menjadi kalimat padu (ترتيب الكلمات)',
+  'Reorganisasi – Mengurutkan kalimat acak menjadi teks sederhana (ترتيب الجمل)',
+];
+
 export const GeneratePanel: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -339,6 +410,10 @@ export const GeneratePanel: React.FC = () => {
   const isAntropologiSubtest = subtesLower.includes('antropologi');
   const isPkwuSubtest = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
   const isPrancisSubtest = subtesLower.includes('prancis') || subtesLower.includes('francais');
+  const isJermanSubtest = subtesLower.includes('jerman') || subtesLower.includes('german') || subtesLower.includes('deutsch');
+  const isJepangSubtest = subtesLower.includes('jepang') || subtesLower.includes('japanese') || subtesLower.includes('nihongo');
+  const isKoreaSubtest = subtesLower.includes('korea') || subtesLower.includes('korean') || subtesLower.includes('hangul') || subtesLower.includes('hangugeo');
+  const isArabSubtest = subtesLower.includes('arab') || subtesLower.includes('arabic');
   const isBindoLanjutSubtest = subtesLower.includes('indo') && (subtesLower.includes('lanjut') || subtesLower.includes('tingkat lanjut'));
   const isMtkLanjutSubtest = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
   const isMtkSubtest = subtesLower.includes('matematika') && !isMtkLanjutSubtest;
@@ -357,6 +432,10 @@ export const GeneratePanel: React.FC = () => {
     if (isAntropologiSubtest) return DEFAULT_ANTROPOLOGI_MATERI_OPTIONS;
     if (isPkwuSubtest) return DEFAULT_PKWU_MATERI_OPTIONS;
     if (isPrancisSubtest) return DEFAULT_PRANCIS_MATERI_OPTIONS;
+    if (isJermanSubtest) return DEFAULT_JERMAN_MATERI_OPTIONS;
+    if (isJepangSubtest) return DEFAULT_JEPANG_MATERI_OPTIONS;
+    if (isKoreaSubtest) return DEFAULT_KOREA_MATERI_OPTIONS;
+    if (isArabSubtest) return DEFAULT_ARAB_MATERI_OPTIONS;
     if (isMtkLanjutSubtest) return DEFAULT_MTK_LANJUT_MATERI_OPTIONS;
     if (isMtkSubtest) return DEFAULT_MTK_MATERI_OPTIONS;
     if (isBingLanjutSubtest) return DEFAULT_BING_LANJUT_MATERI_OPTIONS;
@@ -385,7 +464,7 @@ export const GeneratePanel: React.FC = () => {
         return updated.slice(0, stimulusCount);
       }
     });
-  }, [stimulusCount, isKimiaSubtest, isFisikaSubtest, isBiologiSubtest, isPpknSubtest, isEkonomiSubtest, isGeografiSubtest, isSosiologiSubtest, isSejarahSubtest, isAntropologiSubtest, isPkwuSubtest, isPrancisSubtest, isMtkSubtest, isMtkLanjutSubtest, isBingSubtest, isBingLanjutSubtest, isBindoLanjutSubtest]);
+  }, [stimulusCount, isKimiaSubtest, isFisikaSubtest, isBiologiSubtest, isPpknSubtest, isEkonomiSubtest, isGeografiSubtest, isSosiologiSubtest, isSejarahSubtest, isAntropologiSubtest, isPkwuSubtest, isPrancisSubtest, isJermanSubtest, isJepangSubtest, isKoreaSubtest, isArabSubtest, isMtkSubtest, isMtkLanjutSubtest, isBingSubtest, isBingLanjutSubtest, isBindoLanjutSubtest]);
 
   const handleMateriChange = (sIdx: number, val: string) => {
     setMateriList(prev => {
@@ -547,6 +626,10 @@ export const GeneratePanel: React.FC = () => {
     const isAntropologi = skillSubtes.includes('antropologi');
     const isPkwu = skillSubtes.includes('pkwu') || skillSubtes.includes('kewirausahaan');
     const isPrancis = skillSubtes.includes('prancis') || skillSubtes.includes('francais');
+    const isJerman = skillSubtes.includes('jerman') || skillSubtes.includes('german') || skillSubtes.includes('deutsch');
+    const isJepang = skillSubtes.includes('jepang') || skillSubtes.includes('japanese') || skillSubtes.includes('nihongo');
+    const isKorea = skillSubtes.includes('korea') || skillSubtes.includes('korean') || skillSubtes.includes('hangul') || skillSubtes.includes('hangugeo');
+    const isArab = skillSubtes.includes('arab') || skillSubtes.includes('arabic');
     const isBindoLanjut = skillSubtes.includes('indo') && (skillSubtes.includes('lanjut') || skillSubtes.includes('tingkat lanjut'));
     const isMtkLanjut = skillSubtes.includes('matematika') && (skillSubtes.includes('tingkat lanjut') || skillSubtes.includes('lanjut'));
     const isMtk = skillSubtes.includes('matematika') && !isMtkLanjut;
@@ -608,6 +691,26 @@ export const GeneratePanel: React.FC = () => {
       setIncludeImagePrompts(true);
       const count = Math.ceil(25 / questionsPerStimulus);
       setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PRANCIS_MATERI_OPTIONS[i % DEFAULT_PRANCIS_MATERI_OPTIONS.length]));
+    } else if (isJerman) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_JERMAN_MATERI_OPTIONS[i % DEFAULT_JERMAN_MATERI_OPTIONS.length]));
+    } else if (isJepang) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_JEPANG_MATERI_OPTIONS[i % DEFAULT_JEPANG_MATERI_OPTIONS.length]));
+    } else if (isKorea) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_KOREA_MATERI_OPTIONS[i % DEFAULT_KOREA_MATERI_OPTIONS.length]));
+    } else if (isArab) {
+      setJumlah(25);
+      setIncludeImagePrompts(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_ARAB_MATERI_OPTIONS[i % DEFAULT_ARAB_MATERI_OPTIONS.length]));
     } else if (isMtkLanjut) {
       setJumlah(25);
       setIncludeImagePrompts(true);
@@ -709,6 +812,10 @@ export const GeneratePanel: React.FC = () => {
     const isAntropologi = subtesLower.includes('antropologi');
     const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
     const isPrancis = subtesLower.includes('prancis') || subtesLower.includes('francais');
+    const isJerman = subtesLower.includes('jerman') || subtesLower.includes('german') || subtesLower.includes('deutsch');
+    const isJepang = subtesLower.includes('jepang') || subtesLower.includes('japanese') || subtesLower.includes('nihongo');
+    const isKorea = subtesLower.includes('korea') || subtesLower.includes('korean') || subtesLower.includes('hangul') || subtesLower.includes('hangugeo');
+    const isArab = subtesLower.includes('arab') || subtesLower.includes('arabic');
     const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
@@ -847,6 +954,54 @@ export const GeneratePanel: React.FC = () => {
       const count = Math.ceil(25 / questionsPerStimulus);
       setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_PRANCIS_MATERI_OPTIONS[i % DEFAULT_PRANCIS_MATERI_OPTIONS.length]));
       toast.success('Preset Paket TKA Bahasa Prancis Aktif: 25 Soal (Mudah 9, Sedang 10, Sulit 6) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isJerman) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(36);
+      setDiffMedium(40);
+      setDiffHots(24);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_JERMAN_MATERI_OPTIONS[i % DEFAULT_JERMAN_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Bahasa Jerman Aktif: 25 Soal (Mudah 9, Sedang 10, Sulit 6) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isJepang) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(36);
+      setDiffMedium(40);
+      setDiffHots(24);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_JEPANG_MATERI_OPTIONS[i % DEFAULT_JEPANG_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Bahasa Jepang Aktif: 25 Soal (Mudah 9, Sedang 10, Sulit 6) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isKorea) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(36);
+      setDiffMedium(40);
+      setDiffHots(24);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_KOREA_MATERI_OPTIONS[i % DEFAULT_KOREA_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Bahasa Korea Aktif: 25 Soal (Mudah 9, Sedang 10, Sulit 6) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
+    } else if (isArab) {
+      setJumlah(25);
+      setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
+      setDifficultyMode('distribution');
+      setDiffEasy(32);
+      setDiffMedium(40);
+      setDiffHots(28);
+      setIncludeImagePrompts(true);
+      setReuseStimulus(true);
+      const count = Math.ceil(25 / questionsPerStimulus);
+      setMateriList(Array.from({ length: count }, (_, i) => DEFAULT_ARAB_MATERI_OPTIONS[i % DEFAULT_ARAB_MATERI_OPTIONS.length]));
+      toast.success('Preset Paket TKA Bahasa Arab Aktif: 25 Soal (Mudah 8, Sedang 10, Sulit 7) & (PG 16, BS 5, PGK 4) + Prompt Gambar');
     } else if (isMtkLanjut) {
       setJumlah(25);
       setTypesAlloc({ PG: 64, BS: 20, PGK: 16, ISIAN: 0 });
@@ -1177,6 +1332,10 @@ export const GeneratePanel: React.FC = () => {
     const isAntropologi = subtesLower.includes('antropologi');
     const isPkwu = subtesLower.includes('pkwu') || subtesLower.includes('kewirausahaan');
     const isPrancis = subtesLower.includes('prancis') || subtesLower.includes('francais');
+    const isJerman = subtesLower.includes('jerman') || subtesLower.includes('german') || subtesLower.includes('deutsch');
+    const isJepang = subtesLower.includes('jepang') || subtesLower.includes('japanese') || subtesLower.includes('nihongo');
+    const isKorea = subtesLower.includes('korea') || subtesLower.includes('korean') || subtesLower.includes('hangul') || subtesLower.includes('hangugeo');
+    const isArab = subtesLower.includes('arab') || subtesLower.includes('arabic');
     const isBindoLanjut = subtesLower.includes('indo') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtkLanjut = subtesLower.includes('matematika') && (subtesLower.includes('tingkat lanjut') || subtesLower.includes('lanjut'));
     const isMtk = subtesLower.includes('matematika') && !isMtkLanjut;
@@ -1204,17 +1363,25 @@ export const GeneratePanel: React.FC = () => {
                         ? 'TKA_PKWU_TRYOUT'
                         : (isPrancis
                           ? 'TKA_PRANCIS_TRYOUT'
-                          : (isMtkLanjut 
-                            ? 'TKA_MATEMATIKA_LANJUT_TRYOUT' 
-                            : (isMtk 
-                              ? 'TKA_MATEMATIKA_TRYOUT' 
-                              : (isBingLanjut 
-                                ? 'TKA_BING_LANJUT_TRYOUT' 
-                                : (isBing 
-                                  ? 'TKA_BING_TRYOUT' 
-                                  : (isBindoLanjut 
-                                    ? 'TKA_BINDO_LANJUT_TRYOUT' 
-                                    : 'TKA_BINDO_TRYOUT')))))))))))))));
+                          : (isJerman
+                            ? 'TKA_JERMAN_TRYOUT'
+                            : (isJepang
+                              ? 'TKA_JEPANG_TRYOUT'
+                              : (isKorea
+                                ? 'TKA_KOREA_TRYOUT'
+                                : (isArab
+                                  ? 'TKA_ARAB_TRYOUT'
+                                  : (isMtkLanjut 
+                                    ? 'TKA_MATEMATIKA_LANJUT_TRYOUT' 
+                                    : (isMtk 
+                                      ? 'TKA_MATEMATIKA_TRYOUT' 
+                                      : (isBingLanjut 
+                                        ? 'TKA_BING_LANJUT_TRYOUT' 
+                                        : (isBing 
+                                          ? 'TKA_BING_TRYOUT' 
+                                          : (isBindoLanjut 
+                                            ? 'TKA_BINDO_LANJUT_TRYOUT' 
+                                            : 'TKA_BINDO_TRYOUT')))))))))))))))))));
     const label = isKimia 
       ? 'TKA Kimia' 
       : (isFisika 
@@ -1237,17 +1404,25 @@ export const GeneratePanel: React.FC = () => {
                         ? 'TKA PKWU'
                         : (isPrancis
                           ? 'TKA B. Prancis'
-                          : (isMtkLanjut 
-                            ? 'TKA MTK Lanjut' 
-                            : (isMtk 
-                              ? 'TKA Matematika' 
-                              : (isBingLanjut 
-                                ? 'TKA B. Inggris Lanjut' 
-                                : (isBing 
-                                  ? 'TKA B. Inggris' 
-                                  : (isBindoLanjut 
-                                    ? 'TKA Bindo Lanjut' 
-                                    : 'TKA')))))))))))))));
+                          : (isJerman
+                            ? 'TKA B. Jerman'
+                            : (isJepang
+                              ? 'TKA B. Jepang'
+                              : (isKorea
+                                ? 'TKA B. Korea'
+                                : (isArab
+                                  ? 'TKA B. Arab'
+                                  : (isMtkLanjut 
+                                    ? 'TKA MTK Lanjut' 
+                                    : (isMtk 
+                                      ? 'TKA Matematika' 
+                                      : (isBingLanjut 
+                                        ? 'TKA B. Inggris Lanjut' 
+                                        : (isBing 
+                                          ? 'TKA B. Inggris' 
+                                          : (isBindoLanjut 
+                                            ? 'TKA Bindo Lanjut' 
+                                            : 'TKA')))))))))))))))))));
     const toastId = toast.loading(`Mengkompilasi ${selectedQuestions.length} soal Excel ${label}...`);
 
     try {

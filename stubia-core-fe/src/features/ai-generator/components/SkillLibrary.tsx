@@ -279,6 +279,10 @@ export const SkillLibrary: React.FC = () => {
                 <option value="TKA Antropologi Pilihan">TKA Antropologi Pilihan</option>
                 <option value="TKA PKWU Pilihan">TKA PKWU Pilihan</option>
                 <option value="TKA Bahasa Prancis Pilihan">TKA Bahasa Prancis Pilihan</option>
+                <option value="TKA Bahasa Jerman Pilihan">TKA Bahasa Jerman Pilihan</option>
+                <option value="TKA Bahasa Jepang Pilihan">TKA Bahasa Jepang Pilihan</option>
+                <option value="TKA Bahasa Korea Pilihan">TKA Bahasa Korea Pilihan</option>
+                <option value="TKA Bahasa Arab Pilihan">TKA Bahasa Arab Pilihan</option>
               </select>
             </div>
 

@@ -185,6 +185,14 @@ export class TKAExportService {
       sheetPrefix = 'TKA PKWU';
     } else if (firstSubtesLower.includes('prancis') || firstSubtesLower.includes('francais')) {
       sheetPrefix = 'TKA B. Prancis';
+    } else if (firstSubtesLower.includes('jerman') || firstSubtesLower.includes('german') || firstSubtesLower.includes('deutsch')) {
+      sheetPrefix = 'TKA B. Jerman';
+    } else if (firstSubtesLower.includes('jepang') || firstSubtesLower.includes('japanese') || firstSubtesLower.includes('nihongo')) {
+      sheetPrefix = 'TKA B. Jepang';
+    } else if (firstSubtesLower.includes('korea') || firstSubtesLower.includes('korean') || firstSubtesLower.includes('hangul') || firstSubtesLower.includes('hangugeo')) {
+      sheetPrefix = 'TKA B. Korea';
+    } else if (firstSubtesLower.includes('arab') || firstSubtesLower.includes('arabic')) {
+      sheetPrefix = 'TKA B. Arab';
     } else if (firstSubtesLower.includes('indo') && firstSubtesLower.includes('lanjut')) {
       sheetPrefix = 'TKA Bindo Lanjut';
     } else if (firstSubtesLower.includes('indo')) {
